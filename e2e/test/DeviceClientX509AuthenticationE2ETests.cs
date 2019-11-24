@@ -11,13 +11,7 @@ namespace Microsoft.Azure.Devices.E2ETests
     [TestCategory("IoTHub-E2E")]
     public class DeviceClientX509AuthenticationE2ETests : IDisposable
     {
-        private static readonly string DevicePrefix = $"E2E_{nameof(DeviceClientX509AuthenticationE2ETests)}_";
         private static readonly TestLogging _log = TestLogging.GetInstance();
-        private static readonly TimeSpan TIMESPAN_ONE_MINUTE = TimeSpan.FromMinutes(1);
-        private static readonly TimeSpan TIMESPAN_ONE_SECOND = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan TIMESPAN_FIVE_SECONDS = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan TIMESPAN_TWENDY_SECONDS = TimeSpan.FromSeconds(20);
-
         private readonly ConsoleEventListener _listener;
         private readonly string _hostName;
 
@@ -27,7 +21,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             _hostName = TestDevice.GetHostName(Configuration.IoTHub.ConnectionString);
         }
 
-        
+        #region manual test: check connection leaking on open failure
         [TestMethod]
         public async Task X509_InvalidDeviceId_Amqp()
         {
@@ -99,6 +93,7 @@ namespace Microsoft.Azure.Devices.E2ETests
         {
             await X509InvalidDeviceIdOpenAsyncTwiceTest(Client.TransportType.Mqtt_WebSocket_Only).ConfigureAwait(false);
         }
+        #endregion
 
         private async Task X509InvalidDeviceIdOpenAsyncTest(Client.TransportType transportType)
         {
@@ -115,8 +110,9 @@ namespace Microsoft.Azure.Devices.E2ETests
                     // It should always throw UnauthorizedException
                 }
 
-                // Check TCP connection to verify there is no connection leak
-                // netstat -na | find "[Your Hub IP]" | find "ESTABLISHED" 
+                _log.WriteLine($"Invaid device with {transportType} open failed.");
+                _log.WriteLine("Check TCP connection to verify there is no connection leak.");
+                _log.WriteLine("netstat -na | find \"[Your Hub IP]\" | find \"ESTABLISHED\"");
                 await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
             }
         }
@@ -139,8 +135,9 @@ namespace Microsoft.Azure.Devices.E2ETests
                     }
                 }
 
-                // Check TCP connection to verify there is no connection leak
-                // netstat -na | find "[Your Hub IP]" | find "ESTABLISHED" 
+                _log.WriteLine($"Invaid device with {transportType} open failed twice.");
+                _log.WriteLine("Check TCP connection to verify there is no connection leak.");
+                _log.WriteLine("netstat -na | find \"[Your Hub IP]\" | find \"ESTABLISHED\"");
                 await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
             }
         }
@@ -154,7 +151,12 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         public void Dispose()
         {
-           
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
         }
     }
 }
