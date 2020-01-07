@@ -31,9 +31,9 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
 
         internal void AmqpConnectionClosed(object sender, EventArgs e)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, $"{nameof(AmqpConnectionClosed)}");
+            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(AmqpConnectionClosed)}");
             Closed?.Invoke(this, e);
-            if (Logging.IsEnabled) Logging.Exit(this, $"{nameof(AmqpConnectionClosed)}");
+            if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(AmqpConnectionClosed)}");
         }
 
         internal async Task<AmqpIoTSession> OpenSessionAsync(TimeSpan timeout)

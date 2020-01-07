@@ -30,7 +30,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
 
         public AmqpLink CreateLink(AmqpSession session, AmqpLinkSettings settings)
         {
-            if (Logging.IsEnabled) Logging.Info(this, session, $"{nameof(CreateLink)}");
+            if (Logger.IsEnabled) Logger.Info(this, session, $"{nameof(CreateLink)}");
             if (settings.IsReceiver())
             {
                 return new ReceivingAmqpLink(session, settings);

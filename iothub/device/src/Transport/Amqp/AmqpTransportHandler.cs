@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             catch (Exception ex)
             {
                 // Do not throw from static ctor.
-                if (Logging.IsEnabled) Logging.Error(null, ex, nameof(AmqpTransportHandler));
+                if (Logger.IsEnabled) Logger.Error(null, ex, nameof(AmqpTransportHandler));
             }
         }
 
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
                 OnDisconnected
             );
 
-            if (Logging.IsEnabled) Logging.Associate(this, _amqpUnit, $"{nameof(_amqpUnit)}");
+            if (Logger.IsEnabled) Logger.Associate(this, _amqpUnit, $"{nameof(_amqpUnit)}");
         }
 
         private void OnDisconnected()
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
         #region Open-Close
         public override async Task OpenAsync(TimeoutHelper timeoutHelper)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, timeoutHelper, $"{nameof(OpenAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, timeoutHelper, $"{nameof(OpenAsync)}");
             lock (_lock)
             {
                 if (_disposed)
@@ -94,13 +94,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, timeoutHelper, $"{nameof(OpenAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, timeoutHelper, $"{nameof(OpenAsync)}");
             }
         }
 
         public override async Task OpenAsync(CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, $"{nameof(OpenAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(OpenAsync)}");
             cancellationToken.ThrowIfCancellationRequested();
             lock (_lock)
             {
@@ -118,13 +118,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, $"{nameof(OpenAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, $"{nameof(OpenAsync)}");
             }
         }
 
         public override async Task CloseAsync(CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, $"{nameof(CloseAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(CloseAsync)}");
             lock (_lock)
             {
                 _closed = true;
@@ -138,7 +138,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             finally
             {
                 OnTransportClosedGracefully();
-                if (Logging.IsEnabled) Logging.Exit(this, $"{nameof(CloseAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(CloseAsync)}");
             }
         }
         #endregion
@@ -146,7 +146,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
         #region Telemetry
         public override async Task SendEventAsync(Message message, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, message, cancellationToken, $"{nameof(SendEventAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, message, cancellationToken, $"{nameof(SendEventAsync)}");
 
             try
             {
@@ -160,13 +160,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, message, cancellationToken, $"{nameof(SendEventAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, message, cancellationToken, $"{nameof(SendEventAsync)}");
             }
         }
 
         public override async Task SendEventAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, messages, cancellationToken, $"{nameof(SendEventAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, messages, cancellationToken, $"{nameof(SendEventAsync)}");
 
             try
             {
@@ -176,22 +176,22 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, messages, cancellationToken, $"{nameof(SendEventAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, messages, cancellationToken, $"{nameof(SendEventAsync)}");
             }
         }
 
         public override async Task<Message> ReceiveAsync(TimeoutHelper timeoutHelper)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, timeoutHelper, timeoutHelper.RemainingTime(), $"{nameof(ReceiveAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, timeoutHelper, timeoutHelper.RemainingTime(), $"{nameof(ReceiveAsync)}");
             Message message = await _amqpUnit.ReceiveMessageAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
-            if (Logging.IsEnabled) Logging.Exit(this, timeoutHelper, timeoutHelper.RemainingTime(), $"{nameof(ReceiveAsync)}");
+            if (Logger.IsEnabled) Logger.Exit(this, timeoutHelper, timeoutHelper.RemainingTime(), $"{nameof(ReceiveAsync)}");
             return message;
         }
 
         public override async Task<Message> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, $"{nameof(ReceiveAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(ReceiveAsync)}");
             Message message;
             while (true)
             {
@@ -203,7 +203,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
                 }
             }
 
-            if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, cancellationToken, $"{nameof(ReceiveAsync)}");
+            if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, cancellationToken, $"{nameof(ReceiveAsync)}");
             return message;
         }
         #endregion
@@ -211,7 +211,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
         #region Methods
         public override async Task EnableMethodsAsync(CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, $"{nameof(EnableMethodsAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(EnableMethodsAsync)}");
 
             try
             {
@@ -222,7 +222,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, $"{nameof(EnableMethodsAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, $"{nameof(EnableMethodsAsync)}");
             }
         }
 
@@ -230,7 +230,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, $"{nameof(DisableMethodsAsync)}");
+                if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(DisableMethodsAsync)}");
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -238,13 +238,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, $"{nameof(DisableMethodsAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, $"{nameof(DisableMethodsAsync)}");
             }
         }
 
         public override async Task SendMethodResponseAsync(MethodResponseInternal methodResponse, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, methodResponse, cancellationToken, $"{nameof(SendMethodResponseAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, methodResponse, cancellationToken, $"{nameof(SendMethodResponseAsync)}");
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -256,7 +256,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, methodResponse, cancellationToken, $"{nameof(SendMethodResponseAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, methodResponse, cancellationToken, $"{nameof(SendMethodResponseAsync)}");
             }
         }
         #endregion
@@ -264,7 +264,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
         #region Twin
         public override async Task EnableTwinPatchAsync(CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, $"{nameof(EnableTwinPatchAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(EnableTwinPatchAsync)}");
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -272,13 +272,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, $"{nameof(EnableTwinPatchAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, $"{nameof(EnableTwinPatchAsync)}");
             }
         }
 
         public override async Task<Twin> SendTwinGetAsync(CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, $"{nameof(SendTwinGetAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(SendTwinGetAsync)}");
             try
             {
                 await EnableTwinPatchAsync(cancellationToken).ConfigureAwait(false);
@@ -291,13 +291,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, $"{nameof(SendTwinGetAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, $"{nameof(SendTwinGetAsync)}");
             }
         }
 
         public override async Task SendTwinPatchAsync(TwinCollection reportedProperties, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, reportedProperties, cancellationToken, $"{nameof(SendTwinPatchAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, reportedProperties, cancellationToken, $"{nameof(SendTwinPatchAsync)}");
             try
             {
                 await EnableTwinPatchAsync(cancellationToken).ConfigureAwait(false);
@@ -305,13 +305,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, reportedProperties, cancellationToken, $"{nameof(SendTwinPatchAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, reportedProperties, cancellationToken, $"{nameof(SendTwinPatchAsync)}");
             }
         }
 
         private async Task<Twin> RoundTripTwinMessage(AmqpTwinMessageType amqpTwinMessageType, TwinCollection reportedProperties, CancellationToken cancellationToken )
         {
-            if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, $"{nameof(RoundTripTwinMessage)}");
+            if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(RoundTripTwinMessage)}");
             string correlationId = Guid.NewGuid().ToString();
             Twin response = null;
 
@@ -344,7 +344,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             finally
             {
                 _twinResponseCompletions.TryRemove(correlationId, out _);
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, $"{nameof(RoundTripTwinMessage)}");
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, $"{nameof(RoundTripTwinMessage)}");
             }
 
             return response;
@@ -354,7 +354,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
         #region Events
         public override async Task EnableEventReceiveAsync(CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, $"{nameof(EnableEventReceiveAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(EnableEventReceiveAsync)}");
 
             try
             {
@@ -364,7 +364,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, $"{nameof(EnableEventReceiveAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, $"{nameof(EnableEventReceiveAsync)}");
             }
         }
         
@@ -373,7 +373,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
         #region Accept-Dispose
         public override Task CompleteAsync(string lockToken, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, lockToken, cancellationToken, $"{nameof(CompleteAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, lockToken, cancellationToken, $"{nameof(CompleteAsync)}");
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -381,13 +381,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, lockToken, cancellationToken, $"{nameof(CompleteAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, lockToken, cancellationToken, $"{nameof(CompleteAsync)}");
             }
         }
 
         public override Task AbandonAsync(string lockToken, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, lockToken, cancellationToken, $"{nameof(AbandonAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, lockToken, cancellationToken, $"{nameof(AbandonAsync)}");
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -395,13 +395,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, lockToken, cancellationToken, $"{nameof(AbandonAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, lockToken, cancellationToken, $"{nameof(AbandonAsync)}");
             }
         }
 
         public override Task RejectAsync(string lockToken, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, lockToken, cancellationToken, $"{nameof(RejectAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, lockToken, cancellationToken, $"{nameof(RejectAsync)}");
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -409,13 +409,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, lockToken, cancellationToken, $"{nameof(RejectAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, lockToken, cancellationToken, $"{nameof(RejectAsync)}");
             }
         }
 
         private async Task DisposeMessageAsync(string lockToken, AmqpIoTDisposeActions outcome)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, outcome, $"{nameof(DisposeMessageAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, outcome, $"{nameof(DisposeMessageAsync)}");
             AmqpIoTOutcome disposeOutcome;
             try
             {
@@ -430,7 +430,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, outcome, $"{nameof(DisposeMessageAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, outcome, $"{nameof(DisposeMessageAsync)}");
             }
         }
         #endregion
@@ -461,7 +461,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             lock (_lock)
             {
                 if (_disposed) return;
-                if (Logging.IsEnabled) Logging.Info(this, $"{nameof(disposing)}");
+                if (Logger.IsEnabled) Logger.Info(this, $"{nameof(disposing)}");
                 if (disposing)
                 {
                     _closed = true;
