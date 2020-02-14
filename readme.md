@@ -35,19 +35,24 @@ Due to security considerations, build logs are not publicly available.
 | Preview                   | [![Build Status](https://azure-iot-sdks.visualstudio.com/azure-iot-sdks/_apis/build/status/csharp/csharp-canary1?branchName=preview)](https://azure-iot-sdks.visualstudio.com/azure-iot-sdks/_build?definitionId=43&_a=summary&repositoryFilter=9&branchFilter=72)|
 
 ## OS platforms and hardware compatibility
+
+```diff
+- .NET MicroFramework will not be supported in future versions of the SDK.
+```
+
 The IoT Hub device SDK for .NET can be used with a broad range of OS platforms and devices.
 
 The NuGet packages provide support for the following .NET flavors:
 - .NET Standard 2.0
 - .NET Standard 1.3 (IoT Hub SDKs only)
 - .NET Framework 4.5.1 (IoT Hub SDKs only)
-- .NET MicroFramework (IoT Hub SDKs only)
 
 For details on .NET support see the [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/standard/net-standard).
 For details on OS support see the following resources:
 - [.NET Core Runtime ID Catalog](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog)
-- [.NET MicroFramework](http://netmf.github.io)
 - [.NET Framework System Requirements](https://docs.microsoft.com/en-us/dotnet/framework/get-started/system-requirements)
+- [Configure TLS Protocol Version and Ciphers](./configure_tls_protocol_version_and_ciphers.md)
+- [.NET MicroFramework](http://netmf.github.io)
 
 ## Key features and roadmap
 
@@ -132,8 +137,8 @@ Below is a table showing the mapping of the LTS branches to the packages release
 
 | Release | Github Branch | LTS Status | LTS Start Date | Maintenance End Date | Removed Date |
 | :-----------: | :-----------: | :--------: | :------------: | :------------------: | :----------: |
-| [2018-1-23](https://github.com/Azure/azure-iot-sdk-csharp/releases/tag/2018-1-23) | lts_2018_01   | Active     | 2018-01-23     | 2018-06-30           | 2018-12-31   |
-| [2017-10-6](https://github.com/Azure/azure-iot-sdk-csharp/releases/tag/2017-10-6) | lts_07_2017   | Deprecated     | 2017-07-01     | 2018-12-31           | 2018-06-30   |
+| [2020-1-31](https://github.com/Azure/azure-iot-sdk-csharp/releases/tag/lts_2020-1-31) | lts_2020_01   | Active     | 2020-01-31     | 2020-06-30           | 2020-12-31   |
+| [2018-1-23](https://github.com/Azure/azure-iot-sdk-csharp/releases/tag/2018-1-23) | lts_2018_01   | Deprecated     | 2018-01-23     | 2018-06-30           | 2018-12-31   |
 
 * <sup>1</sup> All scheduled dates are subject to change by the Azure IoT SDK team.
 

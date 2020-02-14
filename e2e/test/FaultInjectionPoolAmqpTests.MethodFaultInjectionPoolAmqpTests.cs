@@ -1,29 +1,32 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright(c) Microsoft.All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Azure.Devices.Client;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.E2ETests
 {
     public partial class FaultInjectionPoolAmqpTests : IDisposable
     {
-        private readonly string MessageSend_DevicePrefix = $"E2E_MessageSendFaultInjectionPoolAmqpTests";
+        private readonly string Method_DevicePrefix = $"E2E_MethodFaultInjectionPoolAmqpTests";
+        private const string MethodName = "MethodE2EFaultInjectionPoolAmqpTests";
 
         // TODO: #943 - Honor different pool sizes for different connection pool settings.
         [Ignore]
         [TestMethod]
-        public async Task Message_DeviceSak_TcpConnectionLossSendRecovery_SingleConnection_Amqp()
+        public async Task Method_DeviceSak_DeviceMethodTcpConnRecovery_SingleConnection_Amqp()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_Tcp_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
                 FaultInjection.FaultType_Tcp,
                 FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
         }
@@ -31,13 +34,14 @@ namespace Microsoft.Azure.Devices.E2ETests
         // TODO: #943 - Honor different pool sizes for different connection pool settings.
         [Ignore]
         [TestMethod]
-        public async Task Message_DeviceSak_TcpConnectionLossSendRecovery_SingleConnection_AmqpWs()
+        public async Task Method_DeviceSak_DeviceMethodTcpConnRecovery_SingleConnection_AmqpWs()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_WebSocket_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
                 FaultInjection.FaultType_Tcp,
                 FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
         }
@@ -45,28 +49,14 @@ namespace Microsoft.Azure.Devices.E2ETests
         // TODO: #943 - Honor different pool sizes for different connection pool settings.
         [Ignore]
         [TestMethod]
-        public async Task Message_IoTHubSak_TcpConnectionLossSendRecovery_SingleConnection_Amqp()
+        public async Task Method_IotHubSak_DeviceMethodTcpConnRecovery_SingleConnection_Amqp()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_Tcp_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_Tcp,
-                FaultInjection.FaultCloseReason_Boom,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_IoTHubSak_TcpConnectionLossSendRecovery_SingleConnection_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
                 FaultInjection.FaultType_Tcp,
                 FaultInjection.FaultCloseReason_Boom,
                 authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
@@ -75,165 +65,77 @@ namespace Microsoft.Azure.Devices.E2ETests
         // TODO: #943 - Honor different pool sizes for different connection pool settings.
         [Ignore]
         [TestMethod]
-        public async Task Message_DeviceSak_AmqpConnectionLossSendRecovery_SingleConnection_Amqp()
+        public async Task Method_IoTHubSak_DeviceMethodTcpConnRecovery_SingleConnection_AmqpWs()
         {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpConn,
-                "").ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpConnectionLossSendRecovery_SingleConnection_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_WebSocket_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpConn,
-                "").ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_IotHubSak_AmqpConnectionLossSendRecovery_SingleConnection_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpConn,
-                "",
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_Tcp,
+                FaultInjection.FaultCloseReason_Boom,
                 authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
         }
 
         // TODO: #943 - Honor different pool sizes for different connection pool settings.
         [Ignore]
         [TestMethod]
-        public async Task Message_IoTHubSak_AmqpConnectionLossSendRecovery_SingleConnection_AmqpWs()
+        public async Task Method_DeviceSak_DeviceMethodAmqpConnLostRecovery_SingleConnection_Amqp()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
+                Client.TransportType.Amqp_Tcp_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
                 FaultInjection.FaultType_AmqpConn,
-                "",
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpSessionLossSendRecovery_SingleConnection_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpSess,
-                "").ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpSessionLossSendRecovery_SingleConnection_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpSess,
-                "").ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_IoTHubSak_AmqpSessionLossSendRecovery_SingleConnection_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpSess,
-                "",
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_IoTHubSak_AmqpSessionLossSendRecovery_SingleConnection_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpSess,
-                "",
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpD2CLinkDropSendRecovery_SingleConnection_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpD2C,
                 FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
         }
 
         // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
         [Ignore]
         [TestMethod]
-        public async Task Message_DeviceSak_AmqpD2CLinkDropSendRecovery_SingleConnection_AmqpWs()
+        public async Task Method_DeviceSak_DeviceMethodAmqpConnLostRecovery_SingleConnection_AmqpWs()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_WebSocket_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpD2C,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpConn,
                 FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
         }
 
         // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
         [Ignore]
         [TestMethod]
-        public async Task Message_IoTHubSak_AmqpD2CLinkDropSendRecovery_SingleConnection_Amqp()
+        public async Task Method_IoTHubSak_DeviceMethodAmqpConnLostRecovery_SingleConnection_Amqp()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_Tcp_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpD2C,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpConn,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodAmqpConnLostRecovery_SingleConnection_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpConn,
                 FaultInjection.FaultCloseReason_Boom,
                 authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
         }
@@ -242,14 +144,196 @@ namespace Microsoft.Azure.Devices.E2ETests
         // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
         [Ignore]
         [TestMethod]
-        public async Task Message_IoTHubSak_AmqpD2CLinkDropSendRecovery_SingleConnection_AmqpWs()
+        public async Task Method_DeviceSak_DeviceMethodSessionLostRecovery_SingleConnection_Amqp()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpSess,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodSessionLostRecovery_SingleConnection_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_WebSocket_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_AmqpD2C,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpSess,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodSessionLostRecovery_SingleConnection_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpSess,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_IoTHub_DeviceMethodSessionLostRecovery_SingleConnection_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpSess,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodReqLinkDropRecovery_SingleConnection_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodReq,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodReqLinkDropRecovery_SingleConnection_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodReq,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodReqLinkDropRecovery_SingleConnection_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodReq,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodReqLinkDropRecovery_SingleConnection_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodReq,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodRespLinkDropRecovery_SingleConnection_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodResp,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodRespLinkDropRecovery_SingleConnection_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodResp,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodRespLinkDropRecovery_SingleConnection_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodResp,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #943 - Honor different pool sizes for different connection pool settings.
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [Ignore]
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodRespLinkDropRecovery_SingleConnection_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.SingleConnection_PoolSize,
+                PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodResp,
                 FaultInjection.FaultCloseReason_Boom,
                 authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
         }
@@ -257,13 +341,14 @@ namespace Microsoft.Azure.Devices.E2ETests
         // TODO: #943 - Honor different pool sizes for different connection pool settings.
         [Ignore]
         [TestMethod]
-        public async Task Message_DeviceSak_GracefulShutdownSendRecovery_SingleConnection_Amqp()
+        public async Task Method_DeviceSak_DeviceMethodGracefulShutdownRecovery_SingleConnection_Amqp()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_Tcp_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
                 FaultInjection.FaultType_GracefulShutdownAmqp,
                 FaultInjection.FaultCloseReason_Bye).ConfigureAwait(false);
         }
@@ -271,461 +356,375 @@ namespace Microsoft.Azure.Devices.E2ETests
         // TODO: #943 - Honor different pool sizes for different connection pool settings.
         [Ignore]
         [TestMethod]
-        public async Task Message_DeviceSak_GracefulShutdownSendRecovery_SingleConnection_AmqpWs()
+        public async Task Method_DeviceSak_DeviceMethodGracefulShutdownRecovery_SingleConnection_AmqpWs()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_WebSocket_Only,
                 PoolingOverAmqp.SingleConnection_PoolSize,
                 PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_GracefulShutdownAmqp,
-                FaultInjection.FaultCloseReason_Bye).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_IoTHubSak_GracefulShutdownSendRecovery_SingleConnection_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_GracefulShutdownAmqp,
-                FaultInjection.FaultCloseReason_Bye,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_IoTHubSak_GracefulShutdownSendRecovery_SingleConnection_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_GracefulShutdownAmqp,
-                FaultInjection.FaultCloseReason_Bye,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_DeviceSak_ThrottledConnectionRecovery_SingleConnection_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_Throttle,
-                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_DeviceSak_ThrottledConnectionRecovery_SingleConnection_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_Throttle,
-                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_IoTHubSak_ThrottledConnectionRecovery_SingleConnection_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_Throttle,
-                FaultInjection.FaultCloseReason_Boom,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #943 - Honor different pool sizes for different connection pool settings.
-        [Ignore]
-        [TestMethod]
-        public async Task Message_IoTHubSak_ThrottledConnectionRecovery_SingleConnection_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.SingleConnection_PoolSize,
-                PoolingOverAmqp.SingleConnection_DevicesCount,
-                FaultInjection.FaultType_Throttle,
-                FaultInjection.FaultCloseReason_Boom,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceSak_TcpConnectionLossSendRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_Tcp,
-                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceSak_TcpConnectionLossSendRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_Tcp,
-                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_IoTHubSak_TcpConnectionLossSendRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_Tcp,
-                FaultInjection.FaultCloseReason_Boom,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_IoTHubSak_TcpConnectionLossSendRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_Tcp,
-                FaultInjection.FaultCloseReason_Boom,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpConnectionLossSendRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpConn,
-                "").ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpConnectionLossSendRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpConn,
-                "").ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_IotHubSak_AmqpConnectionLossSendRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpConn,
-                "",
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_IoTHubSak_AmqpConnectionLossSendRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpConn,
-                "",
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpSessionLossSendRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpSess,
-                "").ConfigureAwait(false);
-        }
-
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpSessionLossSendRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpSess,
-                "").ConfigureAwait(false);
-        }
-
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [TestMethod]
-        public async Task Message_IoTHubSak_AmqpSessionLossSendRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpSess,
-                "",
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [TestMethod]
-        public async Task Message_IoTHubSak_AmqpSessionLossSendRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpSess,
-                "",
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpD2CLinkDropSendRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpD2C,
-                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
-        }
-
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [TestMethod]
-        public async Task Message_DeviceSak_AmqpD2CLinkDropSendRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpD2C,
-                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
-        }
-
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [TestMethod]
-        public async Task Message_IoTHubSak_AmqpD2CLinkDropSendRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpD2C,
-                FaultInjection.FaultCloseReason_Boom,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
-        [TestMethod]
-        public async Task Message_IoTHubSak_AmqpD2CLinkDropSendRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_AmqpD2C,
-                FaultInjection.FaultCloseReason_Boom,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceSak_GracefulShutdownSendRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
                 FaultInjection.FaultType_GracefulShutdownAmqp,
                 FaultInjection.FaultCloseReason_Bye).ConfigureAwait(false);
         }
 
         [TestMethod]
-        public async Task Message_DeviceSak_GracefulShutdownSendRecovery_MultipleConnections_AmqpWs()
+        public async Task Method_DeviceSak_DeviceMethodTcpConnRecovery_MultipleConnections_Amqp()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_Tcp,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodTcpConnRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
                 Client.TransportType.Amqp_WebSocket_Only,
                 PoolingOverAmqp.MultipleConnections_PoolSize,
                 PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_Tcp,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task Method_IotHubSak_DeviceMethodTcpConnRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_Tcp,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodTcpConnRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_Tcp,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodAmqpConnLostRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpConn,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodAmqpConnLostRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpConn,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodAmqpConnLostRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpConn,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodAmqpConnLostRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpConn,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodSessionLostRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpSess,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodSessionLostRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpSess,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodSessionLostRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpSess,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_IoTHub_DeviceMethodSessionLostRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpSess,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodReqLinkDropRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodReq,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodReqLinkDropRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodReq,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodReqLinkDropRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodReq,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodReqLinkDropRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodReq,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodRespLinkDropRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodResp,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodRespLinkDropRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodResp,
+                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodRespLinkDropRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodResp,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        // TODO: #950 - Link/session faults for message send/ method/ twin operations closes the connection.
+        [TestMethod]
+        public async Task Method_IoTHubSak_DeviceMethodRespLinkDropRecovery_MultipleConnections_AmqpWs()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
+                FaultInjection.FaultType_AmqpMethodResp,
+                FaultInjection.FaultCloseReason_Boom,
+                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task Method_DeviceSak_DeviceMethodGracefulShutdownRecovery_MultipleConnections_Amqp()
+        {
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
+                PoolingOverAmqp.MultipleConnections_PoolSize,
+                PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
                 FaultInjection.FaultType_GracefulShutdownAmqp,
                 FaultInjection.FaultCloseReason_Bye).ConfigureAwait(false);
         }
 
         [TestMethod]
-        public async Task Message_IoTHubSak_GracefulShutdownSendRecovery_MultipleConnections_Amqp()
+        public async Task Method_DeviceSak_DeviceMethodGracefulShutdownRecovery_MultipleConnections_AmqpWs()
         {
-            await SendMessageRecoveryPoolOverAmqp(
+            await SendMethodAndRespondRecoveryPoolOverAmqp(
                 TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
+                Client.TransportType.Amqp_WebSocket_Only,
                 PoolingOverAmqp.MultipleConnections_PoolSize,
                 PoolingOverAmqp.MultipleConnections_DevicesCount,
+                MethodE2ETests.SetDeviceReceiveMethod,
                 FaultInjection.FaultType_GracefulShutdownAmqp,
-                FaultInjection.FaultCloseReason_Bye,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
+                FaultInjection.FaultCloseReason_Bye).ConfigureAwait(false);
         }
 
-        [TestMethod]
-        public async Task Message_IoTHubSak_GracefulShutdownSendRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_GracefulShutdownAmqp,
-                FaultInjection.FaultCloseReason_Bye,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceSak_ThrottledConnectionRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_Throttle,
-                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceSak_ThrottledConnectionRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_Throttle,
-                FaultInjection.FaultCloseReason_Boom).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_IoTHubSak_ThrottledConnectionRecovery_MultipleConnections_Amqp()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_Tcp_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_Throttle,
-                FaultInjection.FaultCloseReason_Boom,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_IoTHubSak_ThrottledConnectionRecovery_MultipleConnections_AmqpWs()
-        {
-            await SendMessageRecoveryPoolOverAmqp(
-                TestDeviceType.Sasl,
-                Client.TransportType.Amqp_WebSocket_Only,
-                PoolingOverAmqp.MultipleConnections_PoolSize,
-                PoolingOverAmqp.MultipleConnections_DevicesCount,
-                FaultInjection.FaultType_Throttle,
-                FaultInjection.FaultCloseReason_Boom,
-                authScope: ConnectionStringAuthScope.IoTHub).ConfigureAwait(false);
-        }
-
-        private async Task SendMessageRecoveryPoolOverAmqp(
+        private async Task SendMethodAndRespondRecoveryPoolOverAmqp(
             TestDeviceType type,
             Client.TransportType transport,
             int poolSize,
             int devicesCount,
+            Func<DeviceClient, string, Task<Task>> setDeviceReceiveMethod,
             string faultType,
             string reason,
             int delayInSec = FaultInjection.DefaultDelayInSec,
             int durationInSec = FaultInjection.DefaultDurationInSec,
             ConnectionStringAuthScope authScope = ConnectionStringAuthScope.Device)
         {
-            Dictionary<string, EventHubTestListener> eventHubListeners = new Dictionary<string, EventHubTestListener>();
+            Dictionary<string, TestDeviceCallbackHandler> testDevicesWithCallbackHandler = new Dictionary<string, TestDeviceCallbackHandler>();
 
             Func<DeviceClient, TestDevice, Task> initOperation = async (deviceClient, testDevice) =>
             {
-                EventHubTestListener testListener = await EventHubTestListener.CreateListener(testDevice.Id).ConfigureAwait(false);
-                eventHubListeners.Add(testDevice.Id, testListener);
+                var testDeviceCallbackHandler = new TestDeviceCallbackHandler(deviceClient);
+                testDevicesWithCallbackHandler.Add(testDevice.Id, testDeviceCallbackHandler);
+
+                _log.WriteLine($"{nameof(MethodE2EPoolAmqpTests)}: Setting method callback handler for device {testDevice.Id}");
+                await testDeviceCallbackHandler.SetDeviceReceiveMethodAsync(MethodName, MethodE2ETests.DeviceResponseJson, MethodE2ETests.ServiceRequestJson).ConfigureAwait(false);
             };
 
             Func<DeviceClient, TestDevice, Task> testOperation = async (deviceClient, testDevice) =>
             {
-                _log.WriteLine($"{nameof(FaultInjectionPoolAmqpTests)}: Preparing to send message for device {testDevice.Id}");
-                await deviceClient.OpenAsync().ConfigureAwait(false);
+                var testDeviceCallbackHandler = testDevicesWithCallbackHandler[testDevice.Id];
+                var cts = new CancellationTokenSource(FaultInjection.RecoveryTimeMilliseconds);
 
-                (Client.Message testMessage, string messageId, string payload, string p1Value) = MessageSendE2ETests.ComposeD2CTestMessage();
+                _log.WriteLine($"{nameof(MethodE2EPoolAmqpTests)}: Preparing to receive method for device {testDevice.Id}");
+                Task serviceSendTask = MethodE2ETests.ServiceSendMethodAndVerifyResponse(
+                    testDevice.Id, MethodName, MethodE2ETests.DeviceResponseJson, MethodE2ETests.ServiceRequestJson);
+                Task methodReceivedTask = testDeviceCallbackHandler.WaitForMethodCallbackAsync(cts.Token);
 
-                _log.WriteLine($"{nameof(FaultInjectionPoolAmqpTests)}.{testDevice.Id}: payload='{payload}' p1Value='{p1Value}'");
-                await deviceClient.SendEventAsync(testMessage).ConfigureAwait(false);
-
-                EventHubTestListener testListener = eventHubListeners[testDevice.Id];
-                bool isReceived = await testListener.WaitForMessage(testDevice.Id, payload, p1Value).ConfigureAwait(false);
-                Assert.IsTrue(isReceived, $"Message is not received for device {testDevice.Id}.");
+                await Task.WhenAll(serviceSendTask, methodReceivedTask).ConfigureAwait(false);
             };
 
             Func<IList<DeviceClient>, Task> cleanupOperation = async (deviceClients) =>
             {
-                foreach (var listener in eventHubListeners)
-                {
-                    await listener.Value.CloseAsync().ConfigureAwait(false);
-                }
                 foreach (DeviceClient deviceClient in deviceClients)
                 {
                     deviceClient.Dispose();
                 }
+
+                testDevicesWithCallbackHandler.Clear();
+                await Task.FromResult<bool>(false).ConfigureAwait(false);
             };
 
             await FaultInjectionPoolingOverAmqp.TestFaultInjectionPoolAmqpAsync(
-                MessageSend_DevicePrefix,
+                Method_DevicePrefix,
                 transport,
                 poolSize,
                 devicesCount,

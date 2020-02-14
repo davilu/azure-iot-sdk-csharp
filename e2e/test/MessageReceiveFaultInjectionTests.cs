@@ -14,8 +14,9 @@ using System.Threading.Tasks;
 namespace Microsoft.Azure.Devices.E2ETests
 {
     [TestClass]
-    [TestCategory("IoTHub-E2E")]
-    [TestCategory("IoTHub-FaultInjection")]
+    [TestCategory("E2E")]
+    [TestCategory("IoTHub")]
+    [TestCategory("FaultInjection")]
     public partial class MessageReceiveFaultInjectionTests : IDisposable
     {
         private readonly string DevicePrefix = $"E2E_{nameof(MessageReceiveFaultInjectionTests)}_";
@@ -199,7 +200,7 @@ namespace Microsoft.Azure.Devices.E2ETests
                         transport == Client.TransportType.Mqtt_WebSocket_Only)
                     {
                         // Dummy ReceiveAsync to ensure mqtt subscription registration before SendAsync() is called on service client.
-                        await deviceClient.ReceiveAsync(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+                        await deviceClient.ReceiveAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
                     }
                 };
 
