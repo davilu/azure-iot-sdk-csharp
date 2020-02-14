@@ -11,15 +11,14 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Client.Transport
 {
-    using ExponentialBackoff = Microsoft.Azure.Devices.Client.ExponentialBackoff;
-
     internal class RetryDelegatingHandler : DefaultDelegatingHandler
     {
         // RetryCount is used for testing purpose and is equal to MaxValue in prod.
-        private static int s_retryMaxCount = int.MaxValue;
+        private const int RetryMaxCount = int.MaxValue;
+
         private RetryPolicy _internalRetryPolicy;
 
-        private SemaphoreSlim _handlerLock = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _handlerLock = new SemaphoreSlim(1, 1);
         private bool _openCalled;
         private bool _opened;
         private bool _methodsEnabled;
@@ -27,7 +26,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
         private bool _eventsEnabled;
 
         private Task _transportClosedTask;
-        private CancellationTokenSource _handleDisconnectCts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _handleDisconnectCts = new CancellationTokenSource();
 
         private readonly ConnectionStatusChangesHandler _onConnectionStatusChanged;
 
@@ -35,14 +34,13 @@ namespace Microsoft.Azure.Devices.Client.Transport
             : base(context, innerHandler)
         {
             IRetryPolicy defaultRetryStrategy = new ExponentialBackoff(
-                retryCount: s_retryMaxCount,
+                retryCount: RetryMaxCount,
                 minBackoff: TimeSpan.FromMilliseconds(100),
                 maxBackoff: TimeSpan.FromSeconds(10),
                 deltaBackoff: TimeSpan.FromMilliseconds(100));
 
             _internalRetryPolicy = new RetryPolicy(new TransientErrorStrategy(), new RetryStrategyAdapter(defaultRetryStrategy));
             _onConnectionStatusChanged = context.Get<ConnectionStatusChangesHandler>();
-            
             if (Logger.IsEnabled) Logger.Associate(this, _internalRetryPolicy, nameof(SetRetryPolicy));
         }
 
@@ -50,12 +48,9 @@ namespace Microsoft.Azure.Devices.Client.Transport
         {
             public bool IsTransient(Exception ex)
             {
-                if (ex is IotHubException)
-                {
-                    return ((IotHubException)ex).IsTransient;
-                }
-
-                return false;
+                return ex is IotHubException
+                    ? ((IotHubException)ex).IsTransient
+                    : false;
             }
         }
 
@@ -74,18 +69,21 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, message, cancellationToken, nameof(SendEventAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
 
-                    if (message.IsBodyCalled)
-                    {
-                        message.ResetBody();
-                    }
+                            if (message.IsBodyCalled)
+                            {
+                                message.ResetBody();
+                            }
 
-                    await base.SendEventAsync(message, cancellationToken).ConfigureAwait(false);
-                },
-                cancellationToken).ConfigureAwait(false);
+                            await base.SendEventAsync(message, cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -99,21 +97,24 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, messages, cancellationToken, nameof(SendEventAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-
-                    foreach (Message m in messages)
-                    {
-                        if (m.IsBodyCalled)
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
                         {
-                            m.ResetBody();
-                        }
-                    }
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
 
-                    await base.SendEventAsync(messages, cancellationToken).ConfigureAwait(false);
-                },
-                cancellationToken).ConfigureAwait(false);
+                            foreach (Message m in messages)
+                            {
+                                if (m.IsBodyCalled)
+                                {
+                                    m.ResetBody();
+                                }
+                            }
+
+                            await base.SendEventAsync(messages, cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -127,13 +128,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, method, cancellationToken, nameof(SendMethodResponseAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    await base.SendMethodResponseAsync(method, cancellationToken).ConfigureAwait(false);
-                },
-                cancellationToken).ConfigureAwait(false);
-
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            await base.SendMethodResponseAsync(method, cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -147,12 +150,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(ReceiveAsync));
 
-                return await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    return await base.ReceiveAsync(cancellationToken).ConfigureAwait(false);
-                },
-                cancellationToken).ConfigureAwait(false);
+                return await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            return await base.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -165,13 +171,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
             try
             {
                 if (Logger.IsEnabled) Logger.Enter(this, timeoutHelper, nameof(ReceiveAsync));
-                return await _internalRetryPolicy.ExecuteAsync(async () =>
-                    {
-                        await EnsureOpenedAsync(timeoutHelper).ConfigureAwait(false);
-                        return await base.ReceiveAsync(timeoutHelper).ConfigureAwait(false);
-                    },
-                    new CancellationTokenSource(timeoutHelper.RemainingTime()).Token
-                ).ConfigureAwait(false);
+                return await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(timeoutHelper).ConfigureAwait(false);
+                            return await base.ReceiveAsync(timeoutHelper).ConfigureAwait(false);
+                        },
+                        new CancellationTokenSource(timeoutHelper.RemainingTime()).Token)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -185,23 +193,26 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(EnableMethodsAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
 
-                    await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-                    try
-                    {
-                        Debug.Assert(!_methodsEnabled);
-                        await base.EnableMethodsAsync(cancellationToken).ConfigureAwait(false);
-                        _methodsEnabled = true;
-                    }
-                    finally
-                    {
-                        _handlerLock.Release();
-                    }
-                },
-                cancellationToken).ConfigureAwait(false);
+                            await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                            try
+                            {
+                                Debug.Assert(!_methodsEnabled);
+                                await base.EnableMethodsAsync(cancellationToken).ConfigureAwait(false);
+                                _methodsEnabled = true;
+                            }
+                            finally
+                            {
+                                _handlerLock.Release();
+                            }
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -215,22 +226,25 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(DisableMethodsAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-                    try
-                    {
-                        Debug.Assert(_methodsEnabled);
-                        await base.DisableMethodsAsync(cancellationToken).ConfigureAwait(false);
-                        _methodsEnabled = false;
-                    }
-                    finally
-                    {
-                        _handlerLock.Release();
-                    }
-                },
-                cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                            try
+                            {
+                                Debug.Assert(_methodsEnabled);
+                                await base.DisableMethodsAsync(cancellationToken).ConfigureAwait(false);
+                                _methodsEnabled = false;
+                            }
+                            finally
+                            {
+                                _handlerLock.Release();
+                            }
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -244,22 +258,25 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(EnableEventReceiveAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-                    try
-                    {
-                        await base.EnableEventReceiveAsync(cancellationToken).ConfigureAwait(false);
-                        Debug.Assert(!_eventsEnabled);
-                        _eventsEnabled = true;
-                    }
-                    finally
-                    {
-                        _handlerLock.Release();
-                    }
-                },
-                cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                            try
+                            {
+                                await base.EnableEventReceiveAsync(cancellationToken).ConfigureAwait(false);
+                                Debug.Assert(!_eventsEnabled);
+                                _eventsEnabled = true;
+                            }
+                            finally
+                            {
+                                _handlerLock.Release();
+                            }
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -273,22 +290,25 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(DisableEventReceiveAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-                    try
-                    {
-                        Debug.Assert(_eventsEnabled);
-                        await base.DisableEventReceiveAsync(cancellationToken).ConfigureAwait(false);
-                        _eventsEnabled = false;
-                    }
-                    finally
-                    {
-                        _handlerLock.Release();
-                    }
-                },
-                cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                            try
+                            {
+                                Debug.Assert(_eventsEnabled);
+                                await base.DisableEventReceiveAsync(cancellationToken).ConfigureAwait(false);
+                                _eventsEnabled = false;
+                            }
+                            finally
+                            {
+                                _handlerLock.Release();
+                            }
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -302,22 +322,25 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(EnableTwinPatchAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-                    try
-                    {
-                        Debug.Assert(!_twinEnabled);
-                        await base.EnableTwinPatchAsync(cancellationToken).ConfigureAwait(false);
-                        _twinEnabled = true;
-                    }
-                    finally
-                    {
-                        _handlerLock.Release();
-                    }
-                },
-                cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            await _handlerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                            try
+                            {
+                                Debug.Assert(!_twinEnabled);
+                                await base.EnableTwinPatchAsync(cancellationToken).ConfigureAwait(false);
+                                _twinEnabled = true;
+                            }
+                            finally
+                            {
+                                _handlerLock.Release();
+                            }
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -331,12 +354,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(SendTwinGetAsync));
 
-                return await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    return await base.SendTwinGetAsync(cancellationToken).ConfigureAwait(false);
-                },
-                cancellationToken).ConfigureAwait(false);
+                return await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            return await base.SendTwinGetAsync(cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -350,12 +376,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, reportedProperties, cancellationToken, nameof(SendTwinPatchAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    await base.SendTwinPatchAsync(reportedProperties, cancellationToken).ConfigureAwait(false);
-                },
-            cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            await base.SendTwinPatchAsync(reportedProperties, cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -369,12 +398,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, lockToken, cancellationToken, nameof(CompleteAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    await base.CompleteAsync(lockToken, cancellationToken).ConfigureAwait(false);
-                },
-                cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            await base.CompleteAsync(lockToken, cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -388,12 +420,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, lockToken, cancellationToken, nameof(AbandonAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    await base.AbandonAsync(lockToken, cancellationToken).ConfigureAwait(false);
-                },
-                cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            await base.AbandonAsync(lockToken, cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -407,12 +442,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 if (Logger.IsEnabled) Logger.Enter(this, lockToken, cancellationToken, nameof(RejectAsync));
 
-                await _internalRetryPolicy.ExecuteAsync(async () =>
-                {
-                    await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
-                    await base.RejectAsync(lockToken, cancellationToken).ConfigureAwait(false);
-                },
-                cancellationToken).ConfigureAwait(false);
+                await _internalRetryPolicy
+                    .ExecuteAsync(
+                        async () =>
+                        {
+                            await EnsureOpenedAsync(cancellationToken).ConfigureAwait(false);
+                            await base.RejectAsync(lockToken, cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
@@ -458,6 +496,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
                 {
                     if (Logger.IsEnabled) Logger.Info(this, "Opening connection", nameof(EnsureOpenedAsync));
                     await OpenAsyncInternal(cancellationToken).ConfigureAwait(false);
+
                     if (!_disposed)
                     {
                         _opened = true;
@@ -490,6 +529,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
                 {
                     if (Logger.IsEnabled) Logger.Info(this, "Opening connection", nameof(EnsureOpenedAsync));
                     await OpenAsyncInternal(timeoutHelper).ConfigureAwait(false);
+
                     if (!_disposed)
                     {
                         _opened = true;
@@ -513,52 +553,57 @@ namespace Microsoft.Azure.Devices.Client.Transport
 
         private Task OpenAsyncInternal(CancellationToken cancellationToken)
         {
-            return _internalRetryPolicy.ExecuteAsync(async () =>
-            {
-                try
-                {
-                    if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(OpenAsync));
+            return _internalRetryPolicy
+                .ExecuteAsync(
+                    async () =>
+                    {
+                        try
+                        {
+                            if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(OpenAsync));
 
-                    // Will throw on error.
-                    await base.OpenAsync(cancellationToken).ConfigureAwait(false);
-                    _onConnectionStatusChanged(ConnectionStatus.Connected, ConnectionStatusChangeReason.Connection_Ok);
-                }
-                catch (IotHubException ex)
-                {
-                    HandleConnectionStatusExceptions(ex);
-                    throw;
-                }
-                finally
-                {
-                    if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, nameof(OpenAsync));
-                }
-            },
-            cancellationToken);
+                            // Will throw on error.
+                            await base.OpenAsync(cancellationToken).ConfigureAwait(false);
+                            _onConnectionStatusChanged(ConnectionStatus.Connected, ConnectionStatusChangeReason.Connection_Ok);
+                        }
+                        catch (IotHubException ex)
+                        {
+                            HandleConnectionStatusExceptions(ex);
+                            throw;
+                        }
+                        finally
+                        {
+                            if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, nameof(OpenAsync));
+                        }
+                    },
+                    cancellationToken);
         }
 
         private Task OpenAsyncInternal(TimeoutHelper timeoutHelper)
         {
-            return _internalRetryPolicy.ExecuteAsync(async () =>
-            {
-                try
-                {
-                    if (Logger.IsEnabled) Logger.Enter(this, timeoutHelper, nameof(OpenAsync));
+            return _internalRetryPolicy
+                .ExecuteAsync(
+                    async () =>
+                    {
+                        try
+                        {
+                            if (Logger.IsEnabled) Logger.Enter(this, timeoutHelper, nameof(OpenAsync));
 
-                    // Will throw on error.
-                    await base.OpenAsync(timeoutHelper).ConfigureAwait(false);
-                    _onConnectionStatusChanged(ConnectionStatus.Connected, ConnectionStatusChangeReason.Connection_Ok);
-                }
-                catch (IotHubException ex)
-                {
-                    HandleConnectionStatusExceptions(ex);
-                    throw;
-                }
-                finally
-                {
-                    if (Logger.IsEnabled) Logger.Exit(this, timeoutHelper, nameof(OpenAsync));
-                }
-            },
-            new CancellationTokenSource(timeoutHelper.RemainingTime()).Token);
+
+                            // Will throw on error.
+                            await base.OpenAsync(timeoutHelper).ConfigureAwait(false);
+                            _onConnectionStatusChanged(ConnectionStatus.Connected, ConnectionStatusChangeReason.Connection_Ok);
+                        }
+                        catch (IotHubException ex)
+                        {
+                            HandleConnectionStatusExceptions(ex);
+                            throw;
+                        }
+                        finally
+                        {
+                            if (Logger.IsEnabled) Logger.Exit(this, timeoutHelper, nameof(OpenAsync));
+                        }
+                    },
+                    new CancellationTokenSource(timeoutHelper.RemainingTime()).Token);
         }
 
         private async Task HandleDisconnect()
@@ -603,15 +648,14 @@ namespace Microsoft.Azure.Devices.Client.Transport
                 // always reconnect.
                 _onConnectionStatusChanged(ConnectionStatus.Disconnected_Retrying, ConnectionStatusChangeReason.Communication_Error);
                 CancellationToken cancellationToken = _handleDisconnectCts.Token;
-                
+
                 // This will recover to the state before the disconnect.
                 await _internalRetryPolicy.ExecuteAsync(async () =>
                 {
                     if (Logger.IsEnabled) Logger.Info(this, "Attempting to recover subscriptions.", nameof(HandleDisconnect));
-                        
                     await base.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-                    List<Task> tasks = new List<Task>(3);
+                    var tasks = new List<Task>(3);
 
                     if (_methodsEnabled)
                     {
@@ -632,7 +676,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
                     {
                         await Task.WhenAll(tasks).ConfigureAwait(false);
                     }
-                    
+
                     // Send the request for transport close notification.
                     _transportClosedTask = HandleDisconnect();
 
@@ -670,7 +714,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
             }
             else if (hubException is DeviceDisabledException)
             {
-                // This mapping along with the DeviceDisabledException class 
+                // This mapping along with the DeviceDisabledException class
                 // needs to be removed because DeviceDisabledException is not used anywhere.
                 status = ConnectionStatusChangeReason.Device_Disabled;
             }
@@ -691,7 +735,6 @@ namespace Microsoft.Azure.Devices.Client.Transport
             {
                 _handleDisconnectCts.Cancel();
             }
-
         }
     }
 }
