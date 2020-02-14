@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Devices.Client
                 catch (Exception ex)
                 {
                     Debug.Assert(false, ex.Message);
-                    if (Logging.IsEnabled) Logging.Error(null, ex, nameof(TelemetryMethods));
+                    if (Logger.IsEnabled) Logger.Error(null, ex, nameof(TelemetryMethods));
                 }
             }
 

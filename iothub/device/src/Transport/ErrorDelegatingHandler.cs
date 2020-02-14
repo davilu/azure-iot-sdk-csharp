@@ -162,7 +162,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, $"{nameof(ErrorDelegatingHandler)}.{nameof(ExecuteWithErrorHandlingAsync)}");
+                if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(ErrorDelegatingHandler)}.{nameof(ExecuteWithErrorHandlingAsync)}");
 
                 try
                 {
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
                 }
                 catch (Exception exception) when (!exception.IsFatal())
                 {
-                    if (Logging.IsEnabled) Logging.Error(this, $"Exception caught: {exception}");
+                    if (Logger.IsEnabled) Logger.Error(this, $"Exception caught: {exception}");
 
                     if (IsSecurityExceptionChain(exception))
                     {
@@ -194,7 +194,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, $"{nameof(ErrorDelegatingHandler)}.{nameof(ExecuteWithErrorHandlingAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(ErrorDelegatingHandler)}.{nameof(ExecuteWithErrorHandlingAsync)}");
             }
         }
     }

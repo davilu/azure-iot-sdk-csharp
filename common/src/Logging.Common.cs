@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Devices.Shared
     [SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Conflicts with DotNetty.Common.Internal.Logging")]
     internal sealed partial class Logging : EventSource
     {
-        /// <summary>The single event source instance to use for all logging.</summary>
+        /// <summary>The single event source instance to use for all Logger.</summary>
         public static readonly Logging Log = new Logging();
 
         #region Metadata
