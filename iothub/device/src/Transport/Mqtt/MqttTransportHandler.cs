@@ -565,6 +565,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         private async Task OpenAsyncInternal(CancellationToken cancellationToken)
         {
+            if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(OpenAsyncInternal)}");
 #if NET451
             this.serverAddresses = Dns.GetHostEntry(this.hostName).AddressList;
 #else
@@ -575,6 +576,10 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                 try
                 {
                     this.channel = await this.channelFactory(this.serverAddresses, ProtocolGatewayPort).ConfigureAwait(true);
+                    if (this.channel == null)
+                    {
+                        throw new IotHubCommunicationException("MQTT channel was not opened");
+                    }
                 }
                 catch (Exception ex) when (!ex.IsFatal())
                 {
@@ -600,15 +605,12 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                 });
             }
 
-            if (this.channel == null)
-            {
-                throw new IotHubCommunicationException("MQTT channel was not opened");
-            }
-
             await this.connectCompletion.Task.ConfigureAwait(true);
 
             // Codes_SRS_CSHARP_MQTT_TRANSPORT_18_031: `OpenAsync` shall subscribe using the '$iothub/twin/res/#' topic filter
             await this.SubscribeTwinResponsesAsync().ConfigureAwait(true);
+
+            if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, $"{nameof(OpenAsyncInternal)}");
         }
 
         private bool TryStop()
@@ -1067,6 +1069,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         private bool TryStateTransition(TransportState fromState, TransportState toState)
         {
+            if (Logger.IsEnabled) Logger.Info(this, $"{fromState} to {toState} on current {state}.", $"{nameof(TryStateTransition)}");
             return (TransportState)Interlocked.CompareExchange(ref this.state, (int)toState, (int)fromState) == fromState;
         }
 
