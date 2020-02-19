@@ -962,6 +962,10 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                     }
                 }
 
+                if (channel == null)
+                {
+                    throw new IotHubCommunicationException("Open MQTT channel failed.");
+                }
                 return channel;
             };
         }
