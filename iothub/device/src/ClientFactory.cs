@@ -375,7 +375,7 @@ namespace Microsoft.Azure.Devices.Client
             // Defer concrete InternalClient creation to OpenAsync
             var client = new InternalClient(iotHubConnectionString, transportSettings, pipelineBuilder, options);
 
-            if (Logging.IsEnabled) Logging.CreateFromConnectionString(client, $"HostName={iotHubConnectionString.HostName};DeviceId={iotHubConnectionString.DeviceId};ModuleId={iotHubConnectionString.ModuleId}", transportSettings, options);
+            if (Logger.IsEnabled) Logger.Info(client, $"HostName={iotHubConnectionString.HostName};DeviceId={iotHubConnectionString.DeviceId};ModuleId={iotHubConnectionString.ModuleId}", nameof(CreateFromConnectionString)); 
             return client;
         }
 

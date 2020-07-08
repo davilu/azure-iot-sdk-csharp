@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, timeoutHelper, $"{nameof(ProtocolRoutingDelegatingHandler)}.{nameof(OpenAsync)}");
+                if (Logger.IsEnabled) Logger.Enter(this, timeoutHelper, $"{nameof(ProtocolRoutingDelegatingHandler)}.{nameof(OpenAsync)}");
 
                 bool gain = await _handlerLock.WaitAsync(timeoutHelper.GetRemainingTime()).ConfigureAwait(false);
                 if (!gain) throw new TimeoutException("Timed out to acquire handler lock.");
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, timeoutHelper, $"{nameof(ProtocolRoutingDelegatingHandler)}.{nameof(OpenAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, timeoutHelper, $"{nameof(ProtocolRoutingDelegatingHandler)}.{nameof(OpenAsync)}");
             }
         }
 
@@ -80,7 +80,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
                 ITransportSettings transportSettings = transportSettingsArray[_nextTransportIndex];
                 Debug.Assert(transportSettings != null);
 
-                if (Logging.IsEnabled) Logging.Info(
+                if (Logger.IsEnabled) Logger.Info(
                     this,
                     $"Trying {transportSettings?.GetTransportType()}",
                     $"{nameof(ProtocolRoutingDelegatingHandler)}.{nameof(OpenAsync)}");
@@ -97,7 +97,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, $"{nameof(ProtocolRoutingDelegatingHandler)}.{nameof(OpenAsync)}");
+                if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, $"{nameof(ProtocolRoutingDelegatingHandler)}.{nameof(OpenAsync)}");
                 cancellationToken.ThrowIfCancellationRequested();
                 await _handlerLock.WaitAsync().ConfigureAwait(false);
                 SelectTransport();
@@ -122,7 +122,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, $"{nameof(ProtocolRoutingDelegatingHandler)}.{nameof(OpenAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, $"{nameof(ProtocolRoutingDelegatingHandler)}.{nameof(OpenAsync)}");
             }
         }
 
@@ -149,7 +149,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
             // Will throw OperationCancelledException if CloseAsync() or Dispose() has been called by the application.
             await base.WaitForTransportClosedAsync().ConfigureAwait(false);
 
-            if (Logging.IsEnabled) Logging.Info(this, "Client disconnected.", nameof(WaitForTransportClosedAsync));
+            if (Logger.IsEnabled) Logger.Info(this, "Client disconnected.", nameof(WaitForTransportClosedAsync));
 
             await _handlerLock.WaitAsync().ConfigureAwait(false);
             Debug.Assert(InnerHandler != null);

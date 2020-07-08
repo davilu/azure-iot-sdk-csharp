@@ -48,7 +48,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Transport
                     throw new ArgumentNullException(nameof(value));
                 }
 
-                if (Logging.IsEnabled) Logging.Associate(this, value);
+                if (Logger.IsEnabled) Logger.Associate(this, value);
                 _innerHandler = value;
             }
         }
@@ -66,7 +66,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Transport
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                if (Logging.IsEnabled) Logging.Info(this, $"{nameof(Port)} set to {value}");
+                if (Logger.IsEnabled) Logger.Info(this, $"{nameof(Port)} set to {value}");
                 _port = value;
             }
         }

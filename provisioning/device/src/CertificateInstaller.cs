@@ -28,7 +28,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client
             }
             catch (Exception ex)
             {
-                if (Logging.IsEnabled) Logging.Error(
+                if (Logger.IsEnabled) Logger.Error(
                      null,
                      $"{nameof(CertificateInstaller)} failed to read store: {ex}.");
             }

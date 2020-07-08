@@ -53,7 +53,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Transport
             ProvisioningTransportRegisterMessage message,
             CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, $"{nameof(ProvisioningTransportHandlerAmqp)}.{nameof(RegisterAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(ProvisioningTransportHandlerAmqp)}.{nameof(RegisterAsync)}");
 
             if (message == null)
             {
@@ -87,7 +87,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Transport
                         $"{nameof(SecurityProviderX509)} or {nameof(SecurityProviderSymmetricKey)}");
                 }
 
-                if (Logging.IsEnabled) Logging.Associate(authStrategy, this);
+                if (Logger.IsEnabled) Logger.Associate(authStrategy, this);
 
                 bool useWebSocket = (FallbackType == TransportFallbackType.WebSocketOnly);
 
@@ -158,7 +158,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Transport
             }
             catch (Exception ex) when (!(ex is ProvisioningTransportException))
             {
-                if (Logging.IsEnabled) Logging.Error(
+                if (Logger.IsEnabled) Logger.Error(
                     this,
                     $"{nameof(ProvisioningTransportHandlerAmqp)} threw exception {ex}",
                     nameof(RegisterAsync));
@@ -167,7 +167,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Transport
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, $"{nameof(ProvisioningTransportHandlerAmqp)}.{nameof(RegisterAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(ProvisioningTransportHandlerAmqp)}.{nameof(RegisterAsync)}");
             }
         }
 
@@ -316,7 +316,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Transport
                 }
                 catch (JsonException ex)
                 {
-                    if (Logging.IsEnabled) Logging.Error(
+                    if (Logger.IsEnabled) Logger.Error(
                         this,
                         $"{nameof(ProvisioningTransportHandlerAmqp)} server returned malformed error response." +
                         $"Parsing error: {ex}. Server response: {rejected.Error.Description}",

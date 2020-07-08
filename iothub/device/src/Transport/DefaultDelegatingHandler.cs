@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
         {
             Context = context;
             _innerHandler = innerHandler;
-            if (Logging.IsEnabled) Logging.Associate(this, _innerHandler, nameof(InnerHandler));
+            if (Logger.IsEnabled) Logger.Associate(this, _innerHandler, nameof(InnerHandler));
         }
 
         public IPipelineContext Context { get; protected set; }
@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
             protected set
             {
                 _innerHandler = value;
-                if (Logging.IsEnabled) Logging.Associate(this, _innerHandler, nameof(InnerHandler));
+                if (Logger.IsEnabled) Logger.Associate(this, _innerHandler, nameof(InnerHandler));
             }
         }
 

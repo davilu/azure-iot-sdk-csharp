@@ -36,13 +36,13 @@ namespace Microsoft.Azure.Devices.Client.Transport
 
         protected void OnTransportClosedGracefully()
         {
-            if (Logging.IsEnabled) Logging.Info(this, $"{nameof(OnTransportClosedGracefully)}");
+            if (Logger.IsEnabled) Logger.Info(this, $"{nameof(OnTransportClosedGracefully)}");
             _transportShouldRetry?.TrySetCanceled();
         }
 
         protected void OnTransportDisconnected()
         {
-            if (Logging.IsEnabled) Logging.Info(this, $"{nameof(OnTransportDisconnected)}");
+            if (Logger.IsEnabled) Logger.Info(this, $"{nameof(OnTransportDisconnected)}");
             _transportShouldRetry?.TrySetResult(true);
         }
     }

@@ -73,17 +73,17 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (Logging.IsEnabled) Logging.Info(null, "Creating Windows TBS Device.");
+                if (Logger.IsEnabled) Logger.Info(null, "Creating Windows TBS Device.");
                 return new TbsDevice();
             }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                if (Logging.IsEnabled) Logging.Info(null, "Creating Linux /dev/tpm0 Device.");
+                if (Logger.IsEnabled) Logger.Info(null, "Creating Linux /dev/tpm0 Device.");
                 return new LinuxTpmDevice();
             }
             else
             {
-                if (Logging.IsEnabled) Logging.Error(null, $"TPM not supported on {RuntimeInformation.OSDescription}");
+                if (Logger.IsEnabled) Logger.Error(null, $"TPM not supported on {RuntimeInformation.OSDescription}");
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new PlatformNotSupportedException("The library doesn't support the current OS platform.");
 #pragma warning restore CA1303 // Do not pass literals as localized parameters
@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
         /// <param name="encryptedKey">The encrypted identity key.</param>
         public override void ActivateIdentityKey(byte[] encryptedKey)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, $"{encryptedKey}", nameof(ActivateIdentityKey));
+            if (Logger.IsEnabled) Logger.Enter(this, $"{encryptedKey}", nameof(ActivateIdentityKey));
             Destroy();
 
             // Take the pieces out of the container
@@ -145,7 +145,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
             _tpm2.FlushContext(_idKeyHandle);
             _idKeyHandle = hmacKeyHandle;
 
-            if (Logging.IsEnabled) Logging.Exit(this, $"{encryptedKey}", nameof(ActivateIdentityKey));
+            if (Logger.IsEnabled) Logger.Exit(this, $"{encryptedKey}", nameof(ActivateIdentityKey));
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
         public override byte[] GetEndorsementKey()
         {
             byte[] ek = _ekPub.GetTpm2BRepresentation();
-            if (Logging.IsEnabled) Logging.Info(this, $"EK={Convert.ToBase64String(ek)}");
+            if (Logger.IsEnabled) Logger.Info(this, $"EK={Convert.ToBase64String(ek)}");
             return ek;
         }
 
@@ -166,7 +166,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
         public override byte[] GetStorageRootKey()
         {
             byte[] srk = _srkPub.GetTpm2BRepresentation();
-            if (Logging.IsEnabled) Logging.Info(this, $"SRK={Convert.ToBase64String(srk)}");
+            if (Logger.IsEnabled) Logger.Info(this, $"SRK={Convert.ToBase64String(srk)}");
             return srk;
         }
 
@@ -177,7 +177,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
         /// <returns>The signed data.</returns>
         public override byte[] Sign(byte[] data)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, null, nameof(Sign));
+            if (Logger.IsEnabled) Logger.Enter(this, null, nameof(Sign));
 
             if (data == null)
             {
@@ -212,7 +212,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
                 result = _tpm2.SequenceComplete(hmacHandle, iterationBuffer, TpmHandle.RhNull, out TkHashcheck nullChk);
             }
 
-            if (Logging.IsEnabled) Logging.Exit(this, null, nameof(Sign));
+            if (Logger.IsEnabled) Logger.Exit(this, null, nameof(Sign));
             return result;
         }
 
@@ -224,7 +224,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
         {
             if (_disposed) return;
 
-            if (Logging.IsEnabled) Logging.Info(this, "Disposing");
+            if (Logger.IsEnabled) Logger.Info(this, "Disposing");
 
             if (disposing)
             {
@@ -275,7 +275,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
 
         private void CacheEkAndSrk()
         {
-            if (Logging.IsEnabled) Logging.Enter(this, null, nameof(CacheEkAndSrk));
+            if (Logger.IsEnabled) Logger.Enter(this, null, nameof(CacheEkAndSrk));
 
             // Get the real EK ready.
             var ekTemplate = new TpmPublic(
@@ -309,7 +309,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Security
 
             _srkPub = ReadOrCreatePersistedKey(new TpmHandle(TPM_20_SRK_HANDLE), new TpmHandle(TpmHandle.RhOwner), srkTemplate);
 
-            if (Logging.IsEnabled) Logging.Exit(this, null, nameof(CacheEkAndSrk));
+            if (Logger.IsEnabled) Logger.Exit(this, null, nameof(CacheEkAndSrk));
         }
 
         private TpmPublic ReadOrCreatePersistedKey(TpmHandle persHandle, TpmHandle hierarchy, TpmPublic template)

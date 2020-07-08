@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Transport
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, $"{request.RequestUri}", nameof(SendAsync));
+            if (Logger.IsEnabled) Logger.Enter(this, $"{request.RequestUri}", nameof(SendAsync));
 
             var valueCollection = HttpUtility.ParseQueryString(request.RequestUri.Query);
             valueCollection[ClientApiVersionHelper.ApiVersionName] = ClientApiVersionHelper.ApiVersion;
@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Transport
 
             request.RequestUri = builder.Uri;
 
-            if (Logging.IsEnabled) Logging.Exit(this, $"{request.RequestUri}", nameof(SendAsync));
+            if (Logger.IsEnabled) Logger.Exit(this, $"{request.RequestUri}", nameof(SendAsync));
             return base.SendAsync(request, cancellationToken);
         }
     }

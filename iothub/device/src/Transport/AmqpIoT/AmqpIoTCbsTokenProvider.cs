@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, namespaceAddress, appliesTo, $"{nameof(IotHubConnectionString)}.{nameof(AmqpIoTCbsTokenProvider.GetTokenAsync)}");
+                if (Logger.IsEnabled) Logger.Enter(this, namespaceAddress, appliesTo, $"{nameof(IotHubConnectionString)}.{nameof(AmqpIoTCbsTokenProvider.GetTokenAsync)}");
 
                 string tokenValue;
                 DateTime expiresOn;
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, namespaceAddress, appliesTo, $"{nameof(IotHubConnectionString)}.{nameof(AmqpIoTCbsTokenProvider.GetTokenAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, namespaceAddress, appliesTo, $"{nameof(IotHubConnectionString)}.{nameof(AmqpIoTCbsTokenProvider.GetTokenAsync)}");
             }
         }
     }
