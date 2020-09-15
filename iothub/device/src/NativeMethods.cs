@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Devices.Client
             {
                 // Catch any DLL not found exceptions
                 Debug.Assert(false, ex.Message);
-                if (Logging.IsEnabled) Logging.Error(null, ex, nameof(NativeMethods));
+                if (Logger.IsEnabled) Logger.Error(null, ex, nameof(NativeMethods));
             }
             return 0;
         }

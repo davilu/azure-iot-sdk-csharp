@@ -200,7 +200,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, nameof(OpenAsync));
+                if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(OpenAsync));
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -210,7 +210,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, nameof(OpenAsync));
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, nameof(OpenAsync));
             }
         }
 
@@ -218,7 +218,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, cancellationToken, nameof(SendEventAsync));
+                if (Logger.IsEnabled) Logger.Enter(this, cancellationToken, nameof(SendEventAsync));
                 cancellationToken.ThrowIfCancellationRequested();
 
                 EnsureValidState();
@@ -228,7 +228,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, cancellationToken, nameof(SendEventAsync));
+                if (Logger.IsEnabled) Logger.Exit(this, cancellationToken, nameof(SendEventAsync));
             }
         }
 
@@ -263,7 +263,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         public override async Task<Message> ReceiveAsync(TimeoutHelper timeoutHelper)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, timeoutHelper, timeoutHelper.GetRemainingTime(), $"{nameof(ReceiveAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, timeoutHelper, timeoutHelper.GetRemainingTime(), $"{nameof(ReceiveAsync)}");
 
             Message message = null;
 
@@ -279,7 +279,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             bool hasMessage = await ReceiveMessageArrivalAsync(timeout, cts.Token).ConfigureAwait(true);
             message = ProcessMessage(message, hasMessage);
 
-            if (Logging.IsEnabled) Logging.Exit(this, timeoutHelper, timeoutHelper.GetRemainingTime(), $"{nameof(ReceiveAsync)}");
+            if (Logger.IsEnabled) Logger.Exit(this, timeoutHelper, timeoutHelper.GetRemainingTime(), $"{nameof(ReceiveAsync)}");
 
             return message;
         }
@@ -389,7 +389,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, "", $"{nameof(MqttTransportHandler)}.{nameof(CloseAsync)}");
+                if (Logger.IsEnabled) Logger.Enter(this, "", $"{nameof(MqttTransportHandler)}.{nameof(CloseAsync)}");
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -409,7 +409,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, "", $"{nameof(MqttTransportHandler)}.{nameof(CloseAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, "", $"{nameof(MqttTransportHandler)}.{nameof(CloseAsync)}");
             }
         }
 
@@ -490,7 +490,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                     }
                     else
                     {
-                        if (Logging.IsEnabled) Logging.Error(this, "Recevied mqtt message on an unrecognized topic, ignoring message. Topic: " + topic);
+                        if (Logger.IsEnabled) Logger.Error(this, "Recevied mqtt message on an unrecognized topic, ignoring message. Topic: " + topic);
                     }
                 }
             }
@@ -568,7 +568,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             }
             catch (Exception ex) when (!ex.IsFatal())
             {
-                if (Logging.IsEnabled) Logging.Error(this, ex.ToString(), nameof(OnError));
+                if (Logger.IsEnabled) Logger.Error(this, ex.ToString(), nameof(OnError));
             }
         }
 
@@ -877,7 +877,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             }
             catch (JsonReaderException ex)
             {
-                if (Logging.IsEnabled) Logging.Error(this, $"Failed to parse Twin JSON: {ex}. Message body: '{body}'");
+                if (Logger.IsEnabled) Logger.Error(this, $"Failed to parse Twin JSON: {ex}. Message body: '{body}'");
                 throw;
             }
         }
@@ -959,7 +959,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                 {
                     try
                     {
-                        if (Logging.IsEnabled) Logging.Info(this, $"Connecting to {address.ToString()}", nameof(CreateChannelFactory));
+                        if (Logger.IsEnabled) Logger.Info(this, $"Connecting to {address.ToString()}", nameof(CreateChannelFactory));
                         channel = await bootstrap.ConnectAsync(address, port).ConfigureAwait(true);
                         break;
                     }
@@ -969,7 +969,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                         {
                             if (ex is ConnectException)     // We will handle DotNetty.Transport.Channels.ConnectException
                             {
-                                if (Logging.IsEnabled) Logging.Error(this, $"ConnectException trying to connect to {address.ToString()}: {ex.ToString()}", nameof(CreateChannelFactory));
+                                if (Logger.IsEnabled) Logger.Error(this, $"ConnectException trying to connect to {address.ToString()}: {ex.ToString()}", nameof(CreateChannelFactory));
                                 return true;
                             }
 
@@ -979,7 +979,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                     catch (ConnectException ex)
                     {
                         //same as above, we will handle DotNetty.Transport.Channels.ConnectException
-                        if (Logging.IsEnabled) Logging.Error(this, $"ConnectException trying to connect to {address.ToString()}: {ex.ToString()}", nameof(CreateChannelFactory));
+                        if (Logger.IsEnabled) Logger.Error(this, $"ConnectException trying to connect to {address.ToString()}: {ex.ToString()}", nameof(CreateChannelFactory));
                     }
                 }
 
@@ -1131,7 +1131,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                     string processorEventCountValue = Environment.ExpandEnvironmentVariables(envValue);
                     if (int.TryParse(processorEventCountValue, out var processorThreadCount))
                     {
-                        if (Logging.IsEnabled) Logging.Info(null, $"EventLoopGroup threads count {processorThreadCount}.");
+                        if (Logger.IsEnabled) Logger.Info(null, $"EventLoopGroup threads count {processorThreadCount}.");
                         return processorThreadCount <= 0 ? new MultithreadEventLoopGroup() :
                             processorThreadCount == 1 ? (IEventLoopGroup)new SingleThreadEventLoop() :
                             new MultithreadEventLoopGroup(processorThreadCount);
@@ -1140,11 +1140,11 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             }
             catch (Exception ex)
             {
-                if (Logging.IsEnabled) Logging.Info(null, $"Could not read EventLoopGroup threads count {ex}");
+                if (Logger.IsEnabled) Logger.Info(null, $"Could not read EventLoopGroup threads count {ex}");
                 return new MultithreadEventLoopGroup();
             }
 
-            if (Logging.IsEnabled) Logging.Info(null, "EventLoopGroup threads count was not set.");
+            if (Logger.IsEnabled) Logger.Info(null, "EventLoopGroup threads count was not set.");
             return new MultithreadEventLoopGroup();
         }
 

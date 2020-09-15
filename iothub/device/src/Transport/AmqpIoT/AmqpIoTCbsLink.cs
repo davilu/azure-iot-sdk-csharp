@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
 
         public async Task<DateTime> SendTokenAsync(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource, string[] requiredClaims, TimeSpan timeout)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, $"{nameof(SendTokenAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(SendTokenAsync)}");
             try
             {
                 return await _amqpCbsLink.SendTokenAsync(tokenProvider, namespaceAddress, audience, resource, requiredClaims, timeout).ConfigureAwait(false);
@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, $"{nameof(SendTokenAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(SendTokenAsync)}");
             }
         }
     }

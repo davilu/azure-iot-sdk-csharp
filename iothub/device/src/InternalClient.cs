@@ -126,7 +126,7 @@ namespace Microsoft.Azure.Devices.Client
 
         public InternalClient(IotHubConnectionString iotHubConnectionString, ITransportSettings[] transportSettings, IDeviceClientPipelineBuilder pipelineBuilder, ClientOptions options)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, transportSettings, pipelineBuilder, nameof(InternalClient) + "_ctor");
+            if (Logger.IsEnabled) Logger.Enter(this, transportSettings, pipelineBuilder, nameof(InternalClient) + "_ctor");
 
             TlsVersions.Instance.SetLegacyAcceptableVersions();
 
@@ -144,11 +144,11 @@ namespace Microsoft.Azure.Devices.Client
 
             IDelegatingHandler innerHandler = pipelineBuilder.Build(pipelineContext);
 
-            if (Logging.IsEnabled) Logging.Associate(this, innerHandler, nameof(InternalClient));
+            if (Logger.IsEnabled) Logger.Associate(this, innerHandler, nameof(InternalClient));
 
             InnerHandler = innerHandler;
 
-            if (Logging.IsEnabled) Logging.Associate(this, transportSettings, nameof(InternalClient));
+            if (Logger.IsEnabled) Logger.Associate(this, transportSettings, nameof(InternalClient));
             _transportSettings = transportSettings;
 
             if (options != null && options.FileUploadTransportSettings != null)
@@ -160,7 +160,7 @@ namespace Microsoft.Azure.Devices.Client
                 _fileUploadHttpTransportHandler = new HttpTransportHandler(pipelineContext, IotHubConnectionString, new Http1TransportSettings());
             }
 
-            if (Logging.IsEnabled) Logging.Exit(this, transportSettings, pipelineBuilder, nameof(InternalClient) + "_ctor");
+            if (Logger.IsEnabled) Logger.Exit(this, transportSettings, pipelineBuilder, nameof(InternalClient) + "_ctor");
         }
 
         /// <summary>
@@ -748,7 +748,7 @@ namespace Microsoft.Azure.Devices.Client
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, blobName, source, nameof(UploadToBlobAsync));
+                if (Logger.IsEnabled) Logger.Enter(this, blobName, source, nameof(UploadToBlobAsync));
 
                 if (string.IsNullOrEmpty(blobName))
                 {
@@ -790,7 +790,7 @@ namespace Microsoft.Azure.Devices.Client
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, blobName, nameof(UploadToBlobAsync));
+                if (Logger.IsEnabled) Logger.Exit(this, blobName, nameof(UploadToBlobAsync));
             }
         }
 
@@ -838,7 +838,7 @@ namespace Microsoft.Azure.Devices.Client
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, methodName, methodHandler, userContext, nameof(SetMethodHandlerAsync));
+                if (Logger.IsEnabled) Logger.Enter(this, methodName, methodHandler, userContext, nameof(SetMethodHandlerAsync));
                 cancellationToken.ThrowIfCancellationRequested();
                 await _methodsDictionarySemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -889,10 +889,10 @@ namespace Microsoft.Azure.Devices.Client
                     // this semaphore is typically grabbed at the start of the method, but if
                     // this method is cancelled while waiting to grab the semaphore, then this semaphore.release
                     // will throw this SemaphoreFullException since it was never grabbed in the first place
-                    if (Logging.IsEnabled) Logging.Info(this, "SemaphoreFullException thrown while releasing methods dictionary semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
+                    if (Logger.IsEnabled) Logger.Info(this, "SemaphoreFullException thrown while releasing methods dictionary semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
                 }
 
-                if (Logging.IsEnabled) Logging.Exit(this, methodName, methodHandler, userContext, nameof(SetMethodHandlerAsync));
+                if (Logger.IsEnabled) Logger.Exit(this, methodName, methodHandler, userContext, nameof(SetMethodHandlerAsync));
             }
         }
 
@@ -928,7 +928,7 @@ namespace Microsoft.Azure.Devices.Client
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, methodHandler, userContext, nameof(SetMethodDefaultHandlerAsync));
+                if (Logger.IsEnabled) Logger.Enter(this, methodHandler, userContext, nameof(SetMethodDefaultHandlerAsync));
                 cancellationToken.ThrowIfCancellationRequested();
                 await _methodsDictionarySemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
                 if (methodHandler != null)
@@ -963,10 +963,10 @@ namespace Microsoft.Azure.Devices.Client
                     // this semaphore is typically grabbed at the start of the method, but if
                     // this method is cancelled while waiting to grab the semaphore, then this semaphore.release
                     // will throw this SemaphoreFullException since it was never grabbed in the first place
-                    if (Logging.IsEnabled) Logging.Info(this, "SemaphoreFullException thrown while releasing methods dictionary semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
+                    if (Logger.IsEnabled) Logger.Info(this, "SemaphoreFullException thrown while releasing methods dictionary semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
                 }
 
-                if (Logging.IsEnabled) Logging.Exit(this, methodHandler, userContext, nameof(SetMethodDefaultHandlerAsync));
+                if (Logger.IsEnabled) Logger.Exit(this, methodHandler, userContext, nameof(SetMethodDefaultHandlerAsync));
             }
         }
 
@@ -981,7 +981,7 @@ namespace Microsoft.Azure.Devices.Client
         [Obsolete("Please use SetMethodHandlerAsync.")]
         public void SetMethodHandler(string methodName, MethodCallback methodHandler, object userContext)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, methodName, methodHandler, userContext, nameof(SetMethodHandler));
+            if (Logger.IsEnabled) Logger.Enter(this, methodName, methodHandler, userContext, nameof(SetMethodHandler));
             try
             {
                 // Dangerous: can cause deadlocks.
@@ -989,7 +989,7 @@ namespace Microsoft.Azure.Devices.Client
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, methodName, methodHandler, userContext, nameof(SetMethodHandler));
+                if (Logger.IsEnabled) Logger.Exit(this, methodName, methodHandler, userContext, nameof(SetMethodHandler));
             }
         }
 
@@ -1002,7 +1002,7 @@ namespace Microsoft.Azure.Devices.Client
         {
             // codes_SRS_DEVICECLIENT_28_025: [** `SetConnectionStatusChangesHandler` shall set connectionStatusChangesHandler **]**
             // codes_SRS_DEVICECLIENT_28_026: [** `SetConnectionStatusChangesHandler` shall unset connectionStatusChangesHandler if `statusChangesHandler` is null **]**
-            if (Logging.IsEnabled) Logging.Info(this, statusChangesHandler, nameof(SetConnectionStatusChangesHandler));
+            if (Logger.IsEnabled) Logger.Info(this, statusChangesHandler, nameof(SetConnectionStatusChangesHandler));
             _connectionStatusChangesHandler = statusChangesHandler;
         }
 
@@ -1013,7 +1013,7 @@ namespace Microsoft.Azure.Devices.Client
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, status, reason, nameof(OnConnectionStatusChanged));
+                if (Logger.IsEnabled) Logger.Enter(this, status, reason, nameof(OnConnectionStatusChanged));
 
                 if (_connectionStatusChangesHandler != null &&
                     (_lastConnectionStatus != status || _lastConnectionStatusChangeReason != reason))
@@ -1025,7 +1025,7 @@ namespace Microsoft.Azure.Devices.Client
             {
                 _lastConnectionStatus = status;
                 _lastConnectionStatusChangeReason = reason;
-                if (Logging.IsEnabled) Logging.Exit(this, status, reason, nameof(OnConnectionStatusChanged));
+                if (Logger.IsEnabled) Logger.Exit(this, status, reason, nameof(OnConnectionStatusChanged));
             }
         }
 
@@ -1036,7 +1036,7 @@ namespace Microsoft.Azure.Devices.Client
         {
             Tuple<MethodCallback, object> m = null;
 
-            if (Logging.IsEnabled) Logging.Enter(this, methodRequestInternal?.Name, methodRequestInternal, nameof(OnMethodCalled));
+            if (Logger.IsEnabled) Logger.Enter(this, methodRequestInternal?.Name, methodRequestInternal, nameof(OnMethodCalled));
 
             // codes_SRS_DEVICECLIENT_10_012: [ If the given methodRequestInternal argument is null, fail silently ]
             if (methodRequestInternal == null)
@@ -1059,13 +1059,13 @@ namespace Microsoft.Azure.Devices.Client
             }
             catch (Exception ex) when (!ex.IsFatal())
             {
-                if (Logging.IsEnabled) Logging.Error(this, ex, nameof(OnMethodCalled));
+                if (Logger.IsEnabled) Logger.Error(this, ex, nameof(OnMethodCalled));
 
                 // codes_SRS_DEVICECLIENT_28_020: [ If the given methodRequestInternal data is not valid json, respond with status code 400 (BAD REQUEST) ]
                 methodResponseInternal = new MethodResponseInternal(methodRequestInternal.RequestId, (int)MethodResponseStatusCode.BadRequest);
 
                 await SendMethodResponseAsync(methodResponseInternal, methodRequestInternal.CancellationToken).ConfigureAwait(false);
-                if (Logging.IsEnabled) Logging.Error(this, ex, nameof(OnMethodCalled));
+                if (Logger.IsEnabled) Logger.Error(this, ex, nameof(OnMethodCalled));
                 return;
             }
             finally
@@ -1079,7 +1079,7 @@ namespace Microsoft.Azure.Devices.Client
                     // this semaphore is typically grabbed at the start of the method, but if
                     // this method is cancelled while waiting to grab the semaphore, then this semaphore.release
                     // will throw this SemaphoreFullException since it was never grabbed in the first place
-                    if (Logging.IsEnabled) Logging.Info(this, "SemaphoreFullException thrown while releasing methods dictionary semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
+                    if (Logger.IsEnabled) Logger.Info(this, "SemaphoreFullException thrown while releasing methods dictionary semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
                 }
             }
 
@@ -1109,7 +1109,7 @@ namespace Microsoft.Azure.Devices.Client
                 }
                 catch (Exception ex)
                 {
-                    if (Logging.IsEnabled) Logging.Error(this, ex, nameof(OnMethodCalled));
+                    if (Logger.IsEnabled) Logger.Error(this, ex, nameof(OnMethodCalled));
 
                     // codes_SRS_DEVICECLIENT_28_021: [ If the MethodResponse from the MethodHandler is not valid json, respond with status code 500 (USER CODE EXCEPTION) ]
                     methodResponseInternal = new MethodResponseInternal(methodRequestInternal.RequestId, (int)MethodResponseStatusCode.UserCodeException);
@@ -1118,7 +1118,7 @@ namespace Microsoft.Azure.Devices.Client
 
             await SendMethodResponseAsync(methodResponseInternal, methodRequestInternal.CancellationToken).ConfigureAwait(false);
 
-            if (Logging.IsEnabled) Logging.Exit(this, methodRequestInternal.Name, methodRequestInternal, nameof(OnMethodCalled));
+            if (Logger.IsEnabled) Logger.Exit(this, methodRequestInternal.Name, methodRequestInternal, nameof(OnMethodCalled));
         }
 
         public void Dispose()
@@ -1288,7 +1288,7 @@ namespace Microsoft.Azure.Devices.Client
                 return;
             }
 
-            if (Logging.IsEnabled) Logging.Info(this, patch.ToJson(), nameof(OnReportedStatePatchReceived));
+            if (Logger.IsEnabled) Logger.Info(this, patch.ToJson(), nameof(OnReportedStatePatchReceived));
             _desiredPropertyUpdateCallback(patch, _twinPatchCallbackContext);
         }
 
@@ -1368,7 +1368,7 @@ namespace Microsoft.Azure.Devices.Client
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, outputName, message, nameof(SendEventAsync));
+                if (Logger.IsEnabled) Logger.Enter(this, outputName, message, nameof(SendEventAsync));
 
                 ValidateModuleTransportHandler("SendEventAsync for a named output");
 
@@ -1392,7 +1392,7 @@ namespace Microsoft.Azure.Devices.Client
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, outputName, message, nameof(SendEventAsync));
+                if (Logger.IsEnabled) Logger.Exit(this, outputName, message, nameof(SendEventAsync));
             }
         }
 
@@ -1428,7 +1428,7 @@ namespace Microsoft.Azure.Devices.Client
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, outputName, messages, nameof(SendEventBatchAsync));
+                if (Logger.IsEnabled) Logger.Enter(this, outputName, messages, nameof(SendEventBatchAsync));
 
                 ValidateModuleTransportHandler("SendEventBatchAsync for a named output");
 
@@ -1453,7 +1453,7 @@ namespace Microsoft.Azure.Devices.Client
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, outputName, messages, nameof(SendEventBatchAsync));
+                if (Logger.IsEnabled) Logger.Exit(this, outputName, messages, nameof(SendEventBatchAsync));
             }
         }
 
@@ -1491,7 +1491,7 @@ namespace Microsoft.Azure.Devices.Client
         /// <returns>The task containing the event</returns>
         public async Task SetInputMessageHandlerAsync(string inputName, MessageHandler messageHandler, object userContext, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, inputName, messageHandler, userContext, nameof(SetInputMessageHandlerAsync));
+            if (Logger.IsEnabled) Logger.Enter(this, inputName, messageHandler, userContext, nameof(SetInputMessageHandlerAsync));
 
             ValidateModuleTransportHandler("SetInputMessageHandlerAsync for a named output");
             try
@@ -1537,10 +1537,10 @@ namespace Microsoft.Azure.Devices.Client
                     // this semaphore is typically grabbed at the start of the method, but if
                     // this method is cancelled while waiting to grab the semaphore, then this semaphore.release
                     // will throw this SemaphoreFullException since it was never grabbed in the first place
-                    if (Logging.IsEnabled) Logging.Info(this, "SemaphoreFullException thrown while releasing receive semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
+                    if (Logger.IsEnabled) Logger.Info(this, "SemaphoreFullException thrown while releasing receive semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
                 }
 
-                if (Logging.IsEnabled) Logging.Exit(this, inputName, messageHandler, userContext, nameof(SetInputMessageHandlerAsync));
+                if (Logger.IsEnabled) Logger.Exit(this, inputName, messageHandler, userContext, nameof(SetInputMessageHandlerAsync));
             }
         }
 
@@ -1578,7 +1578,7 @@ namespace Microsoft.Azure.Devices.Client
         /// <returns>The task containing the event</returns>
         public async Task SetMessageHandlerAsync(MessageHandler messageHandler, object userContext, CancellationToken cancellationToken)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, messageHandler, userContext, nameof(SetMessageHandlerAsync));
+            if (Logger.IsEnabled) Logger.Enter(this, messageHandler, userContext, nameof(SetMessageHandlerAsync));
 
             try
             {
@@ -1608,10 +1608,10 @@ namespace Microsoft.Azure.Devices.Client
                     // this semaphore is typically grabbed at the start of the method, but if
                     // this method is cancelled while waiting to grab the semaphore, then this semaphore.release
                     // will throw this SemaphoreFullException since it was never grabbed in the first place
-                    if (Logging.IsEnabled) Logging.Info(this, "SemaphoreFullException thrown while releasing receive semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
+                    if (Logger.IsEnabled) Logger.Info(this, "SemaphoreFullException thrown while releasing receive semaphore, but will be ignored since that means the semaphore is available for other threads to grab again anyways");
                 }
 
-                if (Logging.IsEnabled) Logging.Exit(this, messageHandler, userContext, nameof(SetMessageHandlerAsync));
+                if (Logger.IsEnabled) Logger.Exit(this, messageHandler, userContext, nameof(SetMessageHandlerAsync));
             }
         }
 
@@ -1642,7 +1642,7 @@ namespace Microsoft.Azure.Devices.Client
         /// </summary>
         internal async Task OnReceiveEventMessageCalled(string input, Message message)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, input, message, nameof(OnReceiveEventMessageCalled));
+            if (Logger.IsEnabled) Logger.Enter(this, input, message, nameof(OnReceiveEventMessageCalled));
 
             // codes_SRS_DEVICECLIENT_33_001: [ If the given eventMessageInternal argument is null, fail silently ]
             if (message == null) return;
@@ -1668,7 +1668,7 @@ namespace Microsoft.Azure.Devices.Client
 
                 // codes_SRS_DEVICECLIENT_33_002: [ The OnReceiveEventMessageCalled shall invoke the specified delegate. ]
                 MessageResponse response = await (callback?.Item1?.Invoke(message, callback.Item2) ?? Task.FromResult(MessageResponse.Completed)).ConfigureAwait(false);
-                if (Logging.IsEnabled) Logging.Info(this, $"{nameof(MessageResponse)} = {response}", nameof(OnReceiveEventMessageCalled));
+                if (Logger.IsEnabled) Logger.Info(this, $"{nameof(MessageResponse)} = {response}", nameof(OnReceiveEventMessageCalled));
 
                 switch (response)
                 {
@@ -1686,7 +1686,7 @@ namespace Microsoft.Azure.Devices.Client
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, input, message, nameof(OnReceiveEventMessageCalled));
+                if (Logger.IsEnabled) Logger.Exit(this, input, message, nameof(OnReceiveEventMessageCalled));
             }
         }
 

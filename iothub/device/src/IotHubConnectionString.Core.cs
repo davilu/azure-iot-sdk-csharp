@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Devices.Client
         {
             try
             {
-                if (Logging.IsEnabled) Logging.Enter(this, $"{nameof(IotHubConnectionString)}.{nameof(IAuthorizationProvider.GetPasswordAsync)}");
+                if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(IotHubConnectionString)}.{nameof(IAuthorizationProvider.GetPasswordAsync)}");
 
                 Debug.Assert(this.TokenRefresher != null);
 
@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Devices.Client
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, $"{nameof(IotHubConnectionString)}.{nameof(IAuthorizationProvider.GetPasswordAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(IotHubConnectionString)}.{nameof(IAuthorizationProvider.GetPasswordAsync)}");
             }
         }
 
