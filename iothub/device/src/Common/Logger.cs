@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Microsoft.Azure.Devices.Client.Transport;
 
 namespace Microsoft.Azure.Devices.Client
 {
@@ -42,52 +43,73 @@ namespace Microsoft.Azure.Devices.Client
 
         internal static void Enter(object thisOrContextObject, object arg0, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Enter {thisOrContextObject} method {memberName} with args: {arg0}.");
+            if (IsEnabled) WriteLog($"Enter {ToString(thisOrContextObject)} method {memberName} with args: {ToString(arg0)}.");
         }
 
         internal static void Enter(object thisOrContextObject, object arg0, object arg1, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Enter {thisOrContextObject} method {memberName} with args: [{arg0}, {arg1}].");
+            if (IsEnabled) WriteLog($"Enter {ToString(thisOrContextObject)} method {memberName} with args: [{ToString(arg0)}, {ToString(arg1)}].");
         }
 
         internal static void Enter(object thisOrContextObject, object arg0, object arg1, object arg2, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Enter {thisOrContextObject} method {memberName} with args: [{arg0}, {arg1}, {arg2}].");
+            if (IsEnabled) WriteLog($"Enter {ToString(thisOrContextObject)} method {memberName} with args: [{ToString(arg0)}, {ToString(arg1)}, {ToString(arg2)}].");
         }
 
         internal static void Exit(object thisOrContextObject, object arg0, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Exit {thisOrContextObject} method {memberName} with args: {arg0}.");
+            if (IsEnabled) WriteLog($"Exit {ToString(thisOrContextObject)} method {memberName} with args: {ToString(arg0)}.");
         }
 
         internal static void Exit(object thisOrContextObject, object arg0, object arg1, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Exit {thisOrContextObject} method {memberName} with args: [{arg0}, {arg1}].");
+            if (IsEnabled) WriteLog($"Exit {ToString(thisOrContextObject)} method {memberName} with args: [{ToString(arg0)}, {ToString(arg1)}].");
         }
 
         internal static void Exit(object thisOrContextObject, object arg0, object arg1, object arg2, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Exit {thisOrContextObject} method {memberName} with args: [{arg0}, {arg1}, {arg2}].");
+            if (IsEnabled) WriteLog($"Exit {ToString(thisOrContextObject)} method {memberName} with args: [{ToString(arg0)}, {ToString(arg1)}, {ToString(arg2)}].");
         }
 
         internal static void Info(object thisOrContextObject, object message, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Info {thisOrContextObject} method {memberName} {message}.");
+            if (IsEnabled) WriteLog($"Info {ToString(thisOrContextObject)} method {memberName} {ToString(message)}.");
         }
 
         internal static void Error(object thisOrContextObject, object message, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Error {thisOrContextObject} method {memberName} {message}");
+            if (IsEnabled) WriteLog($"Error {ToString(thisOrContextObject)} method {memberName} {ToString(message)}");
         }
 
         internal static void Associate(object thisOrContextObject, object parent, object resource, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Associate: {thisOrContextObject} method {memberName} {resource} is Associated to {parent}.");
+            if (IsEnabled) WriteLog($"Associate: {ToString(thisOrContextObject)} method {memberName} {ToString(resource)} is Associated to {ToString(parent)}.");
         }
 
         internal static void Associate(object thisOrContextObject, object resource, [CallerMemberName] string memberName = null)
         {
-            if (IsEnabled) WriteLog($"Associate: {thisOrContextObject} method {memberName} {resource} is Associated to {thisOrContextObject}.");
+            if (IsEnabled) WriteLog($"Associate: {ToString(thisOrContextObject)} method {memberName} {ToString(resource)} is Associated to {ToString(thisOrContextObject)}.");
+        }
+
+        static string ToString(object obj)
+        {
+            if (obj == null)
+            {
+                return "null";
+            }
+
+            if (obj is DeviceIdentity deviceIdentity)
+            {
+                return deviceIdentity.IotHubConnectionString.ModuleId == null ? deviceIdentity.IotHubConnectionString.DeviceId : $"{deviceIdentity.IotHubConnectionString.DeviceId}/{deviceIdentity.IotHubConnectionString.ModuleId}";
+            }
+
+            if (obj is TimeoutHelper timeoutHelper)
+            {
+                return $"TimeoutHelper: {timeoutHelper.GetRemainingTime()}";
+            }
+            
+            return $"[{obj.GetType()}::{obj.GetHashCode()}]{obj}";
+
         }
     }
 }

@@ -74,6 +74,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Amqp
             }
             catch (Exception e) when (!e.IsFatal())
             {
+                if (Logger.IsEnabled) Logger.Error(this, e, $"{nameof(OpenConnectionAsync)}");
                 transportBase?.Close();
                 throw;
             }

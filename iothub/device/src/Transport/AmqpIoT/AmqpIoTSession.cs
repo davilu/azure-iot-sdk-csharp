@@ -27,9 +27,9 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
 
         private void AmqpSessionClosed(object sender, EventArgs e)
         {
-            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(AmqpSessionClosed)}");
+            if (Logger.IsEnabled) Logger.Enter(this, sender, $"{nameof(AmqpSessionClosed)}");
             Closed?.Invoke(this, e);
-            if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(AmqpSessionClosed)}");
+            if (Logger.IsEnabled) Logger.Exit(this, sender, $"{nameof(AmqpSessionClosed)}");
         }
 
         internal Task CloseAsync(TimeSpan timeout)
@@ -207,7 +207,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             TimeSpan timeout
         )
         {
-            if (Logger.IsEnabled) Logger.Enter(typeof(AmqpIoTSession), deviceIdentity, $"{nameof(OpenSendingAmqpLinkAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(typeof(AmqpIoTSession), deviceIdentity, timeout, $"{nameof(OpenSendingAmqpLinkAsync)}");
 
             string serviceApiVersion = ClientApiVersionHelper.ApiVersionString;
 
@@ -254,6 +254,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             catch (Exception e) when (!e.IsFatal())
             {
+                if (Logger.IsEnabled) Logger.Error(deviceIdentity, timeout, $"{nameof(OpenSendingAmqpLinkAsync)}");
                 Exception ex = AmqpIoTExceptionAdapter.ConvertToIoTHubException(e, amqpSession);
                 if (ReferenceEquals(e, ex))
                 {
@@ -271,7 +272,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             finally
             {
-                if (Logger.IsEnabled) Logger.Exit(typeof(AmqpIoTSession), deviceIdentity, $"{nameof(OpenSendingAmqpLinkAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(typeof(AmqpIoTSession), deviceIdentity, timeout, $"{nameof(OpenSendingAmqpLinkAsync)}");
             }
         }
 
@@ -286,7 +287,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             string correlationId,
             TimeSpan timeout)
         {
-            if (Logger.IsEnabled) Logger.Enter(typeof(AmqpIoTSession), deviceIdentity, $"{nameof(OpenReceivingAmqpLinkAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(typeof(AmqpIoTSession), deviceIdentity, timeout, $"{nameof(OpenReceivingAmqpLinkAsync)}");
 
             uint prefetchCount = deviceIdentity.AmqpTransportSettings.PrefetchCount;
 
@@ -324,6 +325,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             catch (Exception e) when (!e.IsFatal())
             {
+                if (Logger.IsEnabled) Logger.Error(deviceIdentity, timeout, $"{nameof(OpenReceivingAmqpLinkAsync)}");
                 Exception ex = AmqpIoTExceptionAdapter.ConvertToIoTHubException(e, amqpSession);
                 if (ReferenceEquals(e, ex))
                 {
@@ -341,7 +343,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             finally
             {
-                if (Logger.IsEnabled) Logger.Exit(typeof(AmqpIoTSession), deviceIdentity, $"{nameof(OpenReceivingAmqpLinkAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(typeof(AmqpIoTSession), deviceIdentity, timeout, $"{nameof(OpenReceivingAmqpLinkAsync)}");
             }
         }
 

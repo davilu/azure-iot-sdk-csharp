@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
         /// <summary>
         /// Used by Edge runtime to specify an authentication chain for Edge-to-Edge connections
         /// </summary>
-        internal string AuthenticationChain { get; set; }
+        public string AuthenticationChain { get; set; }
 
         private const bool DefaultCleanSession = false;
         private const bool DefaultDeviceReceiveAckCanTimeout = false;

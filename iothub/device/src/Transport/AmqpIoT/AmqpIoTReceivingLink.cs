@@ -32,9 +32,9 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
 
         private void ReceivingAmqpLinkClosed(object sender, EventArgs e)
         {
-            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(ReceivingAmqpLinkClosed)}");
+            if (Logger.IsEnabled) Logger.Enter(this, sender, $"{nameof(ReceivingAmqpLinkClosed)}");
             Closed?.Invoke(this, e);
-            if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(ReceivingAmqpLinkClosed)}");
+            if (Logger.IsEnabled) Logger.Exit(this, sender, $"{nameof(ReceivingAmqpLinkClosed)}");
         }
 
         internal Task CloseAsync(TimeSpan timeout)
@@ -56,20 +56,21 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
 
         internal async Task<Message> ReceiveAmqpMessageAsync(TimeSpan timeout)
         {
-            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(ReceiveAmqpMessageAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, timeout, $"{nameof(ReceiveAmqpMessageAsync)}");
             try
             {
                 var amqpMessage = await _receivingAmqpLink.ReceiveMessageAsync(timeout).ConfigureAwait(false);
-                Message message = null;
-                if (amqpMessage != null)
+                if (amqpMessage == null)
                 {
-                    message = AmqpIoTMessageConverter.AmqpMessageToMessage(amqpMessage);
-                    message.LockToken = new Guid(amqpMessage.DeliveryTag.Array).ToString();
+                    return null;
                 }
+                var message = AmqpIoTMessageConverter.AmqpMessageToMessage(amqpMessage);
+                message.LockToken = new Guid(amqpMessage.DeliveryTag.Array).ToString();
                 return message;
             }
             catch (Exception e) when (!e.IsFatal())
             {
+                if (Logger.IsEnabled) Logger.Error(this, e, $"{nameof(ReceiveAmqpMessageAsync)}");
                 Exception ex = AmqpIoTExceptionAdapter.ConvertToIoTHubException(e, _receivingAmqpLink);
                 if (ReferenceEquals(e, ex))
                 {
@@ -87,13 +88,13 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             finally
             {
-                if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(ReceiveAmqpMessageAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, timeout, $"{nameof(ReceiveAmqpMessageAsync)}");
             }
         }
 
         internal async Task<AmqpIoTOutcome> DisposeMessageAsync(string lockToken, Outcome outcome, TimeSpan timeout)
         {
-            if (Logger.IsEnabled) Logger.Enter(this, outcome, $"{nameof(DisposeMessageAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, outcome, timeout, $"{nameof(DisposeMessageAsync)}");
 
             ArraySegment<byte> deliveryTag = ConvertToDeliveryTag(lockToken);
             Outcome disposeOutcome =
@@ -103,7 +104,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
                     batchable: true,
                     timeout: timeout).ConfigureAwait(false);
 
-            if (Logger.IsEnabled) Logger.Exit(this, outcome, $"{nameof(DisposeMessageAsync)}");
+            if (Logger.IsEnabled) Logger.Exit(this, outcome, timeout, $"{nameof(DisposeMessageAsync)}");
 
             return new AmqpIoTOutcome(disposeOutcome);
         }

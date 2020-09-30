@@ -28,15 +28,22 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
 
         private void SendingAmqpLinkClosed(object sender, EventArgs e)
         {
-            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(SendingAmqpLinkClosed)}");
+            if (Logger.IsEnabled) Logger.Enter(this, sender, $"{nameof(SendingAmqpLinkClosed)}");
             Closed?.Invoke(this, e);
-            if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(SendingAmqpLinkClosed)}");
+            if (Logger.IsEnabled) Logger.Exit(this, sender, $"{nameof(SendingAmqpLinkClosed)}");
         }
 
         internal Task CloseAsync(TimeSpan timeout)
         {
-            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(CloseAsync)}");
-            return _sendingAmqpLink.CloseAsync(timeout);
+            if (Logger.IsEnabled) Logger.Enter(this, timeout, $"{nameof(CloseAsync)}");
+            try
+            {
+                return _sendingAmqpLink.CloseAsync(timeout);
+            }
+            finally
+            {
+                if (Logger.IsEnabled) Logger.Exit(this, timeout, $"{nameof(CloseAsync)}");
+            }
         }
 
         internal void SafeClose()
@@ -55,19 +62,29 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
 
         internal async Task<AmqpIoTOutcome> SendMessageAsync(Message message, TimeSpan timeout)
         {
-            if (Logger.IsEnabled) Logger.Enter(this, message, $"{nameof(SendMessageAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, message, timeout, $"{nameof(SendMessageAsync)}");
 
-            AmqpMessage amqpMessage = AmqpIoTMessageConverter.MessageToAmqpMessage(message);
-            Outcome outcome = await SendAmqpMessageAsync(amqpMessage, timeout).ConfigureAwait(false);
+            try
+            {
+                AmqpMessage amqpMessage = AmqpIoTMessageConverter.MessageToAmqpMessage(message);
+                Outcome outcome = await SendAmqpMessageAsync(amqpMessage, timeout).ConfigureAwait(false);
+                return new AmqpIoTOutcome(outcome);
+            }
+            catch (Exception e)
+            {
+                if (Logger.IsEnabled) Logger.Error(this, e, $"{nameof(SendMessageAsync)}");
+                throw;
+            }
+            finally
+            { 
+                if (Logger.IsEnabled) Logger.Exit(this, message, timeout, $"{nameof(SendMessageAsync)}");
+            }
 
-            if (Logger.IsEnabled) Logger.Exit(this, message, $"{nameof(SendMessageAsync)}");
-
-            return new AmqpIoTOutcome(outcome);
         }
 
         internal async Task<AmqpIoTOutcome> SendMessagesAsync(IEnumerable<Message> messages, TimeSpan timeout)
         {
-            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(SendMessagesAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, timeout, $"{nameof(SendMessagesAsync)}");
 
             // List to hold messages in Amqp friendly format
             var messageList = new List<Data>();
@@ -84,27 +101,37 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
                 }
             }
 
-            Outcome outcome;
-            using (AmqpMessage amqpMessage = AmqpMessage.Create(messageList))
+            try
             {
-                amqpMessage.MessageFormat = AmqpConstants.AmqpBatchedMessageFormat;
-                outcome = await SendAmqpMessageAsync(amqpMessage, timeout).ConfigureAwait(false);
-            }
+                Outcome outcome;
+                using (AmqpMessage amqpMessage = AmqpMessage.Create(messageList))
+                {
+                    amqpMessage.MessageFormat = AmqpConstants.AmqpBatchedMessageFormat;
+                    outcome = await SendAmqpMessageAsync(amqpMessage, timeout).ConfigureAwait(false);
+                }
 
-            AmqpIoTOutcome amqpIoTOutcome = new AmqpIoTOutcome(outcome);
-            if (amqpIoTOutcome != null)
+                AmqpIoTOutcome amqpIoTOutcome = new AmqpIoTOutcome(outcome);
+                if (amqpIoTOutcome != null)
+                {
+                    amqpIoTOutcome.ThrowIfNotAccepted();
+                }
+
+                return amqpIoTOutcome;
+            }
+            catch (Exception e)
             {
-                amqpIoTOutcome.ThrowIfNotAccepted();
+                if (Logger.IsEnabled) Logger.Error(this, e, $"{nameof(SendMessagesAsync)}");
+                throw;
             }
-
-            if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(SendMessagesAsync)}");
-
-            return amqpIoTOutcome;
+            finally
+            {
+                if (Logger.IsEnabled) Logger.Exit(this, timeout, $"{nameof(SendMessagesAsync)}");
+            }
         }
 
         private async Task<Outcome> SendAmqpMessageAsync(AmqpMessage amqpMessage, TimeSpan timeout)
         {
-            if (Logger.IsEnabled) Logger.Enter(this, $"{nameof(SendAmqpMessageAsync)}");
+            if (Logger.IsEnabled) Logger.Enter(this, timeout, $"{nameof(SendAmqpMessageAsync)}");
 
             try
             {
@@ -116,6 +143,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             catch (Exception e) when (!e.IsFatal())
             {
+                if (Logger.IsEnabled) Logger.Error(this, e, $"{nameof(SendAmqpMessageAsync)}");
+
                 Exception ex = AmqpIoTExceptionAdapter.ConvertToIoTHubException(e, _sendingAmqpLink);
                 if (ReferenceEquals(e, ex))
                 {
@@ -133,7 +162,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             finally
             {
-                if (Logger.IsEnabled) Logger.Exit(this, $"{nameof(SendAmqpMessageAsync)}");
+                if (Logger.IsEnabled) Logger.Exit(this, timeout, $"{nameof(SendAmqpMessageAsync)}");
             }
         }
 

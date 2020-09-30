@@ -40,9 +40,11 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
         {
             if (_amqpConnection.IsClosing())
             {
+                if (Logger.IsEnabled) Logger.Error(this, "AMQP connection is disconnected.", $"{nameof(OpenSessionAsync)}");
                 throw new IotHubCommunicationException("Amqp connection is disconnected.");
             }
 
+            if (Logger.IsEnabled) Logger.Enter(this, timeout, $"{nameof(OpenSessionAsync)}");
             AmqpSessionSettings amqpSessionSettings = new AmqpSessionSettings()
             {
                 Properties = new Fields()
@@ -57,6 +59,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             catch(Exception e) when (!e.IsFatal())
             {
+                if (Logger.IsEnabled) Logger.Error(this, e, $"{nameof(OpenSessionAsync)}");
                 Exception ex = AmqpIoTExceptionAdapter.ConvertToIoTHubException(e, _amqpConnection);
                 if (ReferenceEquals(e, ex))
                 {
@@ -72,14 +75,21 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
                     throw ex;
                 }
             }
+            finally
+            {
+                if (Logger.IsEnabled) Logger.Exit(this, timeout, $"{nameof(OpenSessionAsync)}");
+            }
         }
 
         internal async Task<IAmqpAuthenticationRefresher> CreateRefresherAsync(DeviceIdentity deviceIdentity, TimeSpan timeout)
         {
             if (_amqpConnection.IsClosing())
             {
+                if (Logger.IsEnabled) Logger.Error(this, "AMQP connection is disconnected.", $"{nameof(CreateRefresherAsync)}");
                 throw new IotHubCommunicationException("Amqp connection is disconnected.");
             }
+
+            if (Logger.IsEnabled) Logger.Enter(this, deviceIdentity, timeout, $"{nameof(CreateRefresherAsync)}");
             try
             {
                 IAmqpAuthenticationRefresher amqpAuthenticator = new AmqpAuthenticationRefresher(deviceIdentity, _amqpIoTCbsLink);
@@ -88,6 +98,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             }
             catch (Exception e) when (!e.IsFatal())
             {
+                if (Logger.IsEnabled) Logger.Error(this, e, $"{nameof(CreateRefresherAsync)}");
                 Exception ex = AmqpIoTExceptionAdapter.ConvertToIoTHubException(e, _amqpConnection);
                 if (ReferenceEquals(e, ex))
                 {
@@ -98,7 +109,10 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
                     throw ex;
                 }
             }
-
+            finally
+            {
+                if (Logger.IsEnabled) Logger.Enter(this, deviceIdentity, timeout, $"{nameof(CreateRefresherAsync)}");
+            }
         }
 
         internal void SafeClose()
